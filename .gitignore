@@ -4,6 +4,8 @@
 .idea/
 *.user
 *.suo
+*.userosscache
+*.sln.docstates
 
 # Node
 **/node_modules/
@@ -12,6 +14,8 @@ yarn-debug.log*
 yarn-error.log*
 
 # .NET build output
+bin/
+obj/
 **/bin/
 **/obj/
 
