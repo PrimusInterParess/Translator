@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OversætMig</title>
+  <link rel="stylesheet" href="result.css" />
+</head>
+
+<body>
+  <div class="card">
+    <h1>OversætMig</h1>
+
+    <textarea id="textInput" class="trans-input"></textarea>
+
+    <div class="trans-actions">
+      <button class="trans-translate" id="translateBtn">Translate</button>
+      <button class="trans-speak" id="speakBtn" type="button" aria-label="Listen" title="Listen"></button>
+    </div>
+    <div class="meta" id="status" aria-live="polite"></div>
+
+    <div
+      class="trans-output"
+      id="output"
+      aria-live="polite"
+      data-err-generic="Sorry — I couldn’t translate that right now. Please try again."
+      data-err-network="I couldn’t reach the translation service. Check your internet connection and try again."
+      data-err-service="The translation service responded in an unexpected way. Please try again in a moment."
+      data-err-internal="Something went wrong in the extension. Please reload and try again."
+    ></div>
+  </div>
+
+  <script src="shared/om.js"></script>
+  <script src="shared/constants.js"></script>
+  <script src="shared/chromeStorageRepo.js"></script>
+  <script src="shared/storage.js"></script>
+  <script src="shared/settings.js"></script>
+  <script src="shared/chromeRuntimeTransport.js"></script>
+  <script src="shared/runtime.js"></script>
+  <script src="shared/lang.js"></script>
+  <script src="shared/text.js"></script>
+  <script src="shared/ui.js"></script>
+  <script src="shared/errors.js"></script>
+  <script src="shared/messages.js"></script>
+  <script src="shared/translationsRepo.js"></script>
+  <script src="shared/icons.js"></script>
+  <script src="shared/speech.js"></script>
+  <script src="shared/ttsPrefs.js"></script>
+  <script src="result/controller.js"></script>
+  <script src="result.js"></script>
+</body>
+
+</html>

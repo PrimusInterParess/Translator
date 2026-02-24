@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css" />
+</head>
+
+<body>
+  <div class="card">
+    <h1 class="appTitle">OversætMig</h1>
+
+    <div class="toggleRow">
+      <label class="toggleLabel" for="enabledToggle">Extension enabled</label>
+      <input id="enabledToggle" type="checkbox" />
+    </div>
+    <div class="hint">When disabled, the on-page selection popup won’t appear.</div>
+
+    <label>Email (MyMemory quota)</label>
+    <input id="emailInput" type="email" placeholder="you@gmail.com" />
+
+    <label>Translate from</label>
+    <div class="selectWrap" data-for="sourceLangSelect">
+      <button type="button" class="selectBtn" aria-haspopup="listbox" aria-expanded="false"></button>
+      <div class="selectList" role="listbox"></div>
+      <select id="sourceLangSelect">
+        <option value="da">Danish</option>
+        <option value="bg">Bulgarian</option>
+        <option value="en">English</option>
+        <option value="auto">Auto (guess)</option>
+      </select>
+    </div>
+
+    <label>Translate to</label>
+    <div class="selectWrap" data-for="targetLangSelect">
+      <button type="button" class="selectBtn" aria-haspopup="listbox" aria-expanded="false"></button>
+      <div class="selectList" role="listbox"></div>
+      <select id="targetLangSelect">
+        <option value="bg">Bulgarian 🇧🇬</option>
+        <option value="en">English 🇬🇧</option>
+        <option value="da">Danish 🇩🇰</option>
+      </select>
+    </div>
+
+    <label>Pronunciation speed <span class="rangeValue" id="ttsRateValue"></span></label>
+    <input id="ttsRateInput" type="range" min="0.7" max="1.4" step="0.05" />
+    <div class="hint">Lower is slower. If it sounds odd, try 1.00.</div>
+
+    <label>Pronunciation volume <span class="rangeValue" id="ttsVolumeValue"></span></label>
+    <input id="ttsVolumeInput" type="range" min="0.2" max="1" step="0.05" />
+    <div class="hint">If it feels sharp, lower volume.</div>
+
+    <label>Pronunciation voice</label>
+    <div class="selectWrap" data-for="ttsProviderSelect">
+      <button type="button" class="selectBtn" aria-haspopup="listbox" aria-expanded="false"></button>
+      <div class="selectList" role="listbox"></div>
+      <select id="ttsProviderSelect">
+        <option value="proxy">High quality voice (recommended)</option>
+        <option value="browser">Browser / OS voice</option>
+      </select>
+    </div>
+  </div>
+  <script src="shared/om.js"></script>
+  <script src="shared/constants.js"></script>
+  <script src="shared/storage.js"></script>
+  <script src="shared/settings.js"></script>
+  <script src="popup/selectEnhancer.js"></script>
+  <script src="popup/controller.js"></script>
+  <script src="popup.js"></script>
+</body>
+
+</html>

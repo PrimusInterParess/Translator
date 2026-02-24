@@ -1,0 +1,61 @@
+{
+  "manifest_version": 3,
+  "name": "OversætMig",
+  "version": "1.1",
+  "permissions": [
+    "storage",
+    "contextMenus",
+    "tts"
+  ],
+  "host_permissions": [
+    "https://api.mymemory.translated.net/*",
+    "https://texttospeech.googleapis.com/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_popup": "controls.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "shared/om.js",
+        "shared/constants.js",
+        "shared/chromeStorageRepo.js",
+        "shared/storage.js",
+        "shared/settings.js",
+        "shared/chromeRuntimeTransport.js",
+        "shared/runtime.js",
+        "shared/lang.js",
+        "shared/text.js",
+        "shared/ui.js",
+        "shared/errors.js",
+        "shared/ttsPrefs.js",
+        "shared/messages.js",
+        "shared/icons.js",
+        "shared/speech.js",
+        "content/popup.js",
+        "content.js"
+      ],
+      "css": [
+        "style.css"
+      ]
+    }
+  ]
+}
