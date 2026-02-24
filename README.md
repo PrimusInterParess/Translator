@@ -19,22 +19,22 @@ For extension-only details (features, structure, debugging), also see `translato
 ```mermaid
 flowchart LR
   subgraph Browser["Chrome / Edge (MV3 extension)"]
-    UI["Popup + Result UI (controls.html, result.html)"]
-    CS["Content script (content.js)"]
-    BG["Service worker (background.js)"]
-    TTS["Browser/OS TTS (chrome.tts)"]
+    UI["Popup + Result UI (controls.html, result.html)"];
+    CS["Content script (content.js)"];
+    BG["Service worker (background.js)"];
+    TTS["Browser/OS TTS (chrome.tts)"];
   end
 
-  MyMemory["MyMemory Translate API (api.mymemory.translated.net)"]
-  Proxy["Local TTS proxy (translator-proxy @ 127.0.0.1:8787)"]
-  Google["Google Cloud Text-to-Speech API (texttospeech.googleapis.com)"]
+  MyMemory["MyMemory Translate API (api.mymemory.translated.net)"];
+  Proxy["Local TTS proxy (translator-proxy @ 127.0.0.1:8787)"];
+  Google["Google Cloud Text-to-Speech API (texttospeech.googleapis.com)"];
 
-  UI -->|runtime messages| BG
-  CS -->|selection + popup events| BG
-  BG -->|translate| MyMemory
-  BG -->|pronounce (fallback)| TTS
-  BG -->|pronounce (recommended): POST /tts| Proxy
-  Proxy -->|synthesize| Google
+  UI -->|runtime messages| BG;
+  CS -->|selection + popup events| BG;
+  BG -->|translate| MyMemory;
+  BG -->|pronounce fallback| TTS;
+  BG -->|pronounce recommended (POST /tts)| Proxy;
+  Proxy -->|synthesize| Google;
 ```
 
 ## Quick start
