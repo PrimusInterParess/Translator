@@ -4,14 +4,26 @@ set -e
 # Git provides pushed refs via STDIN:
 # <local ref> <local sha> <remote ref> <remote sha>
 should_build=0
+seen_any=0
 while read local_ref local_sha remote_ref remote_sha
 do
+  seen_any=1
   case "$remote_ref" in
     refs/heads/master|refs/heads/main)
       should_build=1
       ;;
   esac
 done
+
+if [ "$seen_any" -ne 1 ]; then
+  # Common case: nothing to push (stdin is empty), so we can't know the target ref.
+  # Give a small hint so it's obvious why nothing happened.
+  branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+  if [ "$branch" = "master" ] || [ "$branch" = "main" ]; then
+    echo "pre-push: no refs to push (already up-to-date) -> skipping rebuild" >&2
+  fi
+  exit 0
+fi
 
 if [ "$should_build" -ne 1 ]; then
   exit 0
@@ -20,5 +32,6 @@ fi
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
 
+echo "pre-push: pushing master/main -> running rebuild.cmd" >&2
 cmd.exe /c "rebuild.cmd"
 
