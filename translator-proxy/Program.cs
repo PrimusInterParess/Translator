@@ -115,8 +115,8 @@ app.MapPost("/tts", async (TtsRequest req, IConfiguration config, IHttpClientFac
     return Results.Json(new { ok = true, audio = new { mimeType = "audio/mpeg", base64 = audioContent } });
 });
 
-var port = builder.Configuration.GetValue<int?>("PORT") ?? 8787;
-app.Run($"http://127.0.0.1:{port}");
+var port = builder.Configuration.GetValue<int?>("PORT") ?? 8788;
+app.Run($"http://0.0.0.0:{port}");
 
 record TtsRequest(
     string? Text,

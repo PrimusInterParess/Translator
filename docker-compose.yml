@@ -1,0 +1,13 @@
+services:
+  translator-proxy:
+    restart: unless-stopped
+    build:
+      context: ./translator-proxy
+      dockerfile: Dockerfile
+    ports:
+      - "8788:8788"
+    environment:
+      # put this in a local .env file (same folder as this compose file)
+      # GOOGLE_TTS_API_KEY=...
+      GOOGLE_TTS_API_KEY: ${GOOGLE_TTS_API_KEY}
+      PORT: 8788
