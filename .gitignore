@@ -27,3 +27,6 @@ obj/
 .env
 .env.*
 
+# allow committing template env file
+!.env.example
+
