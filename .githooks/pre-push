@@ -32,6 +32,14 @@ fi
 repo_root="$(git rev-parse --show-toplevel)"
 cd "$repo_root"
 
-echo "pre-push: pushing master/main -> running rebuild.cmd" >&2
-cmd.exe /c "rebuild.cmd"
+echo "pre-push: pushing master/main -> rebuilding docker compose stack" >&2
+
+echo "=== Building images (pull latest base) ===" >&2
+docker compose build --pull
+
+echo "=== Recreating containers with new image ===" >&2
+docker compose up -d --force-recreate
+
+echo "=== Cleaning dangling images ===" >&2
+docker image prune -f
 

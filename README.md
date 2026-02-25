@@ -132,15 +132,14 @@ type .\.githooks\pre-push
 
 What happens:
 
-- When you push `master` or `main`, it runs `rebuild.cmd`
-- That script:
+- When you push `master` or `main`, the `pre-push` hook rebuilds the compose stack:
   - runs `docker compose build --pull`
   - recreates containers with `docker compose up -d --force-recreate` (brief local downtime)
   - cleans dangling images with `docker image prune -f`
 
 How to confirm it ran:
 
-- Run `git push origin master` (or `main`) and look for the `rebuild.cmd` output:
+- Run `git push origin master` (or `main`) and look for these lines:
   - `=== Building images (pull latest base) ===`
   - `=== Recreating containers with new image ===`
   - `=== Cleaning dangling images ===`
