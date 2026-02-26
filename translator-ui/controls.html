@@ -67,6 +67,14 @@
         <option value="browser">Browser / OS voice</option>
       </select>
     </div>
+
+    <div class="divider"></div>
+
+    <label>Verb forms (Gemini)</label>
+    <textarea id="verbFormsTextInput" rows="2" placeholder="Type a verb or phrase…"></textarea>
+    <button id="verbFormsBtn" type="button" class="primaryBtn">Get verb forms</button>
+    <div id="verbFormsStatus" class="hint" aria-live="polite"></div>
+    <pre id="verbFormsOutput" class="outputBox" aria-live="polite"></pre>
   </div>
   <script src="shared/om.js"></script>
   <script src="shared/constants.js"></script>

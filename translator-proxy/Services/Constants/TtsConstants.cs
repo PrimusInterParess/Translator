@@ -4,7 +4,10 @@ internal static class TtsConstants
 {
     public const int MaxTextLength = 500;
 
-    public const string GoogleTtsApiKeyConfigKey = "GOOGLE_TTS_API_KEY";
+    // Preferred config path: Tts:Google:ApiKey (env var: Tts__Google__ApiKey)
+    public const string GoogleTtsApiKeyConfigKey = "Tts:Google:ApiKey";
+    // Legacy config key (still supported)
+    public const string LegacyGoogleTtsApiKeyConfigKey = "GOOGLE_TTS_API_KEY";
 
     public const string GoogleTtsSynthesizeBaseUrl = "https://texttospeech.googleapis.com/v1/text:synthesize";
     public const string GoogleTtsApiKeyQueryParamName = "key";

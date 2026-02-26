@@ -56,7 +56,11 @@ public sealed class TtsService : ITtsService
             }
         };
 
-        var apiKey = (_config[TtsConstants.GoogleTtsApiKeyConfigKey] ?? string.Empty).Trim();
+        var apiKey = (
+            _config[TtsConstants.GoogleTtsApiKeyConfigKey] ??
+            _config[TtsConstants.LegacyGoogleTtsApiKeyConfigKey] ??
+            string.Empty
+        ).Trim();
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             return new TtsServiceResult(

@@ -54,6 +54,10 @@
     const googleVoiceNameInput = document.getElementById('googleVoiceNameInput');
     const googlePitchInput = document.getElementById('googlePitchInput');
     const googlePitchValue = document.getElementById('googlePitchValue');
+    const verbFormsTextInput = document.getElementById('verbFormsTextInput');
+    const verbFormsBtn = document.getElementById('verbFormsBtn');
+    const verbFormsStatus = document.getElementById('verbFormsStatus');
+    const verbFormsOutput = document.getElementById('verbFormsOutput');
 
     const settings = await OM.settings.get();
 
@@ -252,6 +256,79 @@
       });
       ttsProxyUrlInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') persistProxyUrl().catch(() => {});
+      });
+    }
+
+    if (verbFormsBtn && verbFormsTextInput && verbFormsOutput) {
+      const setStatus = (msg) => {
+        if (verbFormsStatus) verbFormsStatus.textContent = msg || '';
+      };
+
+      const setOutput = (v) => {
+        if (v == null) {
+          verbFormsOutput.textContent = '';
+          return;
+        }
+        if (typeof v === 'string') {
+          verbFormsOutput.textContent = v;
+          return;
+        }
+        try {
+          verbFormsOutput.textContent = JSON.stringify(v, null, 2);
+        } catch {
+          verbFormsOutput.textContent = String(v);
+        }
+      };
+
+      const callVerbForms = async () => {
+        const text = String(verbFormsTextInput.value || '').trim();
+        if (!text) {
+          setStatus('Type something first.');
+          setOutput(null);
+          return;
+        }
+
+        verbFormsBtn.disabled = true;
+        setStatus('Loading…');
+        setOutput(null);
+
+        const url = C.DEFAULTS.verbFormsProxyUrl;
+        const r = await fetch(url, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ text }),
+        });
+
+        const d = await (async () => {
+          try {
+            return await r.json();
+          } catch {
+            return null;
+          }
+        })();
+
+        if (!r.ok) {
+          const statusText = r.status ? `HTTP ${r.status}` : 'HTTP error';
+          const msg = typeof d?.error === 'string' && d.error.trim() ? d.error.trim() : statusText;
+          throw new Error(msg);
+        }
+
+        setStatus('Done.');
+        setOutput(d ?? (await r.text()));
+      };
+
+      verbFormsBtn.addEventListener('click', () => {
+        callVerbForms()
+          .catch((e) => {
+            setStatus(e?.message ? String(e.message) : 'Request failed');
+          })
+          .finally(() => {
+            verbFormsBtn.disabled = false;
+          });
+      });
+
+      verbFormsTextInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) verbFormsBtn.click();
       });
     }
   }

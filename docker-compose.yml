@@ -8,6 +8,9 @@ services:
       - "8788:8788"
     environment:
       # put this in a local .env file (same folder as this compose file)
-      # GOOGLE_TTS_API_KEY=...
-      GOOGLE_TTS_API_KEY: ${GOOGLE_TTS_API_KEY}
-      PORT: 8788
+      # Tts__Google__ApiKey=...
+      Tts__Google__ApiKey: ${Tts__Google__ApiKey}
+      # Gemini__ApiKey=...
+      Gemini__ApiKey: ${Gemini__ApiKey}
+      Gemini__Model: ${Gemini__Model:-gemini-1.5-flash}
+      PORT: ${PORT:-8788}

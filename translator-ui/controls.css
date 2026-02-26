@@ -102,8 +102,24 @@ select {
   font: inherit;
   outline: none;
 }
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.75);
+  color: #111;
+  font: inherit;
+  outline: none;
+  resize: vertical;
+}
 input:focus,
 select:focus {
+  border-color: rgba(10, 132, 255, 0.65);
+  box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.16);
+}
+textarea:focus {
   border-color: rgba(10, 132, 255, 0.65);
   box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.16);
 }
@@ -129,6 +145,48 @@ input[type="range"] {
 input[type="range"]:focus {
   border-color: rgba(10, 132, 255, 0.65);
   box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.16);
+}
+
+.divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.08);
+  margin: 12px 0;
+  border-radius: 999px;
+}
+
+.primaryBtn {
+  width: 100%;
+  border: 1px solid rgba(10, 132, 255, 0.4);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: rgba(10, 132, 255, 0.15);
+  color: rgba(0, 0, 0, 0.88);
+  font: inherit;
+  cursor: pointer;
+}
+.primaryBtn:hover {
+  background: rgba(10, 132, 255, 0.2);
+}
+.primaryBtn:active {
+  background: rgba(10, 132, 255, 0.26);
+}
+.primaryBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.outputBox {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.65);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 220px;
+  overflow: auto;
+  font-size: 11px;
+  line-height: 1.35;
 }
 
 /* Custom rounded dropdown */

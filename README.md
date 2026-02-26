@@ -9,8 +9,9 @@ Chrome/Edge translation helper extension (**`translator-ui/`**) with an optional
   - Pronunciation via:
     - **Browser/OS voice** (`chrome.tts`), or
     - **Local proxy** (recommended) → Google Cloud Text-to-Speech
-- **`translator-proxy/`**: ASP.NET (net8.0) minimal API that exposes:
+- **`translator-proxy/`**: ASP.NET Core (net8.0) Web API that exposes:
   - `POST /translate/mymemory`
+  - `POST /verbforms/gemini`
   - `POST /tts`
   on `http://127.0.0.1:8788`
 
@@ -55,15 +56,23 @@ flowchart LR
 The extension expects a local proxy at `http://127.0.0.1:8788`:
 
 - Translation calls: `POST /translate/mymemory`
+- Verb forms (Danish) calls: `POST /verbforms/gemini` (**new**)
 - High-quality pronunciation calls: `POST /tts` (when **Pronunciation voice** is set to “High quality voice (recommended)”)
 
 #### Option A — .NET proxy (recommended)
 
-1. Put your Google API key into `translator-proxy/appsettings.Development.local.json` (this filename is already in `.gitignore`):
+1. Put your API keys into `translator-proxy/appsettings.Development.local.json` (this filename is already in `.gitignore`):
 
 ```json
 {
-  "GOOGLE_TTS_API_KEY": "YOUR_KEY_HERE"
+  "Tts": {
+    "Google": {
+      "ApiKey": "YOUR_KEY_HERE"
+    }
+  },
+  "Gemini": {
+    "ApiKey": "YOUR_KEY_HERE"
+  }
 }
 ```
 
@@ -75,6 +84,67 @@ dotnet run
 ```
 
 Health check: `GET http://127.0.0.1:8788/health`
+
+#### Option B — Docker Compose
+
+1. Copy `.env.example` to `.env` and fill:
+
+```ini
+# Google Cloud Text-to-Speech (proxy `/tts`)
+Tts__Google__ApiKey=YOUR_KEY_HERE
+
+# Gemini API (proxy `/verbforms/gemini`)
+Gemini__ApiKey=YOUR_KEY_HERE
+Gemini__Model=gemini-1.5-flash
+
+PORT=8788
+```
+
+2. Start the proxy:
+
+```powershell
+docker compose up -d --build
+```
+
+Health check: `GET http://127.0.0.1:8788/health`
+
+## Proxy API (quick reference)
+
+All responses are JSON. Successful responses always include `ok: true`; errors include `ok: false` and `error`.
+
+### `POST /translate/mymemory`
+
+- Request:
+  - `text` (required, max 500 chars)
+  - `source` (required, e.g. `"da"`)
+  - `target` (required, e.g. `"en"`)
+  - `email` (optional; passed to MyMemory as `de=...`)
+- Response (ok): `{ "ok": true, "translatedText": "..." }`
+
+### `POST /verbforms/gemini` (Danish verb forms)
+
+- Request:
+  - `text` (required, max 120 chars). Accepts `"at spise"` or `"spise"`; the proxy normalizes to the infinitive without `"at"`.
+- Response (ok):
+  - `infinitive`, `present`, `past`, `pastParticiple`, `imperative`
+
+Example:
+
+```powershell
+curl -Method POST "http://127.0.0.1:8788/verbforms/gemini" `
+  -ContentType "application/json" `
+  -Body '{"text":"at spise"}'
+```
+
+### `POST /tts`
+
+- Request:
+  - `text` (required, max 500 chars)
+  - `languageCode` (optional, e.g. `"da-DK"`)
+  - `voiceName` (optional, e.g. `"da-DK-Neural2-D"`)
+  - `speakingRate` (optional)
+  - `pitch` (optional)
+- Response (ok): `{ "ok": true, "audio": { "mimeType": "audio/mpeg", "base64": "..." } }`
 
 ## Auto-start after reboot (Windows)
 
@@ -166,6 +236,8 @@ Optional publishing:
 
 ## Notes on secrets
 
-- The proxy reads `GOOGLE_TTS_API_KEY` from configuration (local JSON in Development or environment variables).
+- The proxy reads Google TTS key from `Tts:Google:ApiKey` (env var: `Tts__Google__ApiKey`). For backward compatibility it also accepts `GOOGLE_TTS_API_KEY`.
+- The proxy reads Gemini key from `Gemini:ApiKey` (env var: `Gemini__ApiKey`). For backward compatibility it also accepts `GEMINI_API_KEY` / `GEMINI_MODEL`.
+- You can create a free Gemini key in Google AI Studio (no credit card): `https://aistudio.google.com/app/apikey`
 - Keep keys in `appsettings.Development.local.json` (or env vars). Avoid committing keys into `appsettings.json`.
 

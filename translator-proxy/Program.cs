@@ -1,5 +1,6 @@
 using System.Text.Json;
 using translator_proxy.Services;
+using translator_proxy.Services.Gemini;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,8 +11,11 @@ if (builder.Environment.IsDevelopment())
 }
 
 builder.Services.AddHttpClient();
+builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection("Gemini"));
+builder.Services.AddSingleton<IGeminiClient, GeminiClient>();
 builder.Services.AddSingleton<ITtsService, TtsService>();
 builder.Services.AddSingleton<ITranslateService, MyMemoryTranslateService>();
+builder.Services.AddSingleton<IVerbFormsService, GeminiVerbFormsService>();
 
 builder.Services.AddCors(options =>
 {
