@@ -13,7 +13,6 @@ Chrome/Edge translation helper extension (**`translator-ui/`**) with an optional
   - `POST /translate/mymemory`
   - `POST /tts`
   on `http://127.0.0.1:8788`
-- **`translator-ui/server/`**: optional Node/Express proxy (same idea as the .NET proxy)
 
 For extension-only details (features, structure, debugging), also see `translator-ui/README.md`.
 
@@ -53,7 +52,10 @@ flowchart LR
 
 ### 2) (Recommended) Run the local TTS proxy
 
-The extension’s **Pronunciation voice** setting defaults to “High quality voice (recommended)”, which expects a local proxy at `http://127.0.0.1:8788/tts`.
+The extension expects a local proxy at `http://127.0.0.1:8788`:
+
+- Translation calls: `POST /translate/mymemory`
+- High-quality pronunciation calls: `POST /tts` (when **Pronunciation voice** is set to “High quality voice (recommended)”)
 
 #### Option A — .NET proxy (recommended)
 
@@ -161,15 +163,6 @@ Quick reference:
 Optional publishing:
 
 - If you want to publish images to a registry instead of (or in addition to) rebuilding the local compose stack, switch the hook to run `scripts/build-translator-proxy-image.ps1 -Push` and set `DOCKER_REGISTRY` / `TRANSLATOR_PROXY_IMAGE`.
-
-#### Option B — Node proxy (alternative)
-
-```powershell
-cd .\translator-ui
-npm install
-$env:GOOGLE_TTS_API_KEY="YOUR_KEY_HERE"
-npm run proxy
-```
 
 ## Notes on secrets
 

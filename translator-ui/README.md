@@ -2,6 +2,8 @@
 
 Small translation helper that translates selected text via a **local proxy** (which calls the MyMemory API).
 
+The proxy expected by the extension lives in **`translator-proxy/`** and listens on `http://127.0.0.1:8788`.
+
 ## Features
 
 - Translate highlighted text via **right click → “OversætMig: Translate selection”**
@@ -28,7 +30,7 @@ Small translation helper that translates selected text via a **local proxy** (wh
    - Edge: `edge://extensions`
 2. Enable **Developer mode**
 3. Click **Load unpacked**
-4. Select this project folder: `translator`
+4. Select this folder: **`translator-ui/`** (the one that contains `manifest.json`)
 
 ## How to use
 
@@ -53,7 +55,7 @@ Small translation helper that translates selected text via a **local proxy** (wh
 
 ### Prerequisites
 
-- Node.js (recommended: modern LTS)
+- Node.js (recommended: modern LTS) — only needed for lint/format/tests in this folder
 
 ### Install dependencies
 
@@ -99,7 +101,6 @@ npm test
 ### Main folders
 
 - `background/*`: background handlers, result window helper, MyMemory client
-- `background/*`: background handlers, result window helper, proxy translation client
 - `content/*`: on-page popup implementation
 - `core/*`: translation + TTS services used by background handlers
 - `shared/*`: shared helpers (OM namespace, storage/settings, runtime messaging, lang guessing, text sanitizing, UI helpers)
