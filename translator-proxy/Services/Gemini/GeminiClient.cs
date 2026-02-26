@@ -48,9 +48,9 @@ public sealed class GeminiClient : IGeminiClient
         if (string.IsNullOrWhiteSpace(usedModel))
             usedModel = opts.Model;
         if (string.IsNullOrWhiteSpace(usedModel))
-            usedModel = "gemini-1.5-flash";
+            usedModel = "gemini-2.5-flash-lite";
 
-        // Allow both "gemini-1.5-flash" and "models/gemini-1.5-flash" inputs.
+        // Allow both "gemini-2.5-flash-lite" and "models/gemini-2.5-flash-lite" inputs.
         // `GenerateContentBaseUrl` already points at ".../models".
         var slash = usedModel.LastIndexOf('/');
         if (slash >= 0 && slash < usedModel.Length - 1)
@@ -123,7 +123,7 @@ public sealed class GeminiClient : IGeminiClient
             var msg = !string.IsNullOrWhiteSpace(upstreamError)
                 ? upstreamError
                 : statusCode == (int)HttpStatusCode.NotFound
-                    ? $"Not found (404) calling {SanitizeUrl(url)}. Model '{model}' may be unavailable for this API version/key/region. Try updating Gemini:Model (e.g. gemini-1.5-flash) and/or switching Gemini:GenerateContentBaseUrl between /v1/models and /v1beta/models."
+                    ? $"Not found (404) calling {SanitizeUrl(url)}. Model '{model}' may be unavailable for this API version/key/region. Try updating Gemini:Model (e.g. gemini-2.5-flash-lite) and/or switching Gemini:GenerateContentBaseUrl between /v1/models and /v1beta/models."
                     : $"HTTP {statusCode}";
 
             return new GeminiClientResult(

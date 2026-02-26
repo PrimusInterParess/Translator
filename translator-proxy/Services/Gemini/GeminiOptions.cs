@@ -3,7 +3,7 @@ namespace translator_proxy.Services.Gemini;
 public sealed class GeminiOptions
 {
     public string? ApiKey { get; set; }
-    public string Model { get; set; } = "gemini-1.5-flash";
+    public string Model { get; set; } = "gemini-2.5-flash-lite";
 
     /// <summary>
     /// Base URL that should point to ".../{apiVersion}/models".

@@ -98,7 +98,7 @@ Tts__Google__ApiKey=YOUR_KEY_HERE
 
 # Gemini API (proxy `/verbforms/gemini`)
 Gemini__ApiKey=YOUR_KEY_HERE
-Gemini__Model=gemini-1.5-flash
+Gemini__Model=gemini-2.5-flash-lite
 Gemini__GenerateContentBaseUrl=https://generativelanguage.googleapis.com/v1/models
 Gemini__EnableApiVersionFallback=true
 
@@ -244,7 +244,7 @@ Optional publishing:
 - The proxy reads Google TTS key from `Tts:Google:ApiKey` (env var: `Tts__Google__ApiKey`). For backward compatibility it also accepts `GOOGLE_TTS_API_KEY`.
 - The proxy reads Gemini key from `Gemini:ApiKey` (env var: `Gemini__ApiKey`). For backward compatibility it also accepts `GEMINI_API_KEY`.
 - Gemini settings:
-  - `Gemini:Model` (env var: `Gemini__Model`) default: `gemini-1.5-flash`
+  - `Gemini:Model` (env var: `Gemini__Model`) default: `gemini-2.5-flash-lite`
   - `Gemini:GenerateContentBaseUrl` (env var: `Gemini__GenerateContentBaseUrl`) default: `https://generativelanguage.googleapis.com/v1/models`
   - `Gemini:EnableApiVersionFallback` (env var: `Gemini__EnableApiVersionFallback`) default: `true` (retries once with `v1` ↔ `v1beta` on 404)
 - You can create a free Gemini key in Google AI Studio (no credit card): `https://aistudio.google.com/app/apikey`
