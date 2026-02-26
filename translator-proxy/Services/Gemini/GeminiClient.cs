@@ -61,6 +61,8 @@ public sealed class GeminiClient : IGeminiClient
         var url = BuildGenerateContentUrl(baseUrl, usedModel, qp, apiKey);
         var (statusCode, json) = await PostAsync(http, url, headerName, apiKey, requestBody, cancellationToken);
 
+        var upstreamError = ExtractUpstreamError(json);
+
         if (statusCode == (int)HttpStatusCode.NotFound && opts.EnableApiVersionFallback)
         {
             var swappedBaseUrl = TrySwapApiVersion(baseUrl);
@@ -71,6 +73,26 @@ public sealed class GeminiClient : IGeminiClient
 
                 // Prefer the fallback response if it isn't a 404, or if it provides a clearer error payload.
                 if (swappedStatus != (int)HttpStatusCode.NotFound || !string.IsNullOrWhiteSpace(ExtractUpstreamError(swappedJson)))
+                {
+                    return ToResult(swappedStatus, swappedJson, swappedUrl, usedModel);
+                }
+            }
+        }
+
+        if (statusCode == (int)HttpStatusCode.BadRequest &&
+            opts.EnableApiVersionFallback &&
+            LooksLikeUnsupportedFieldError(upstreamError))
+        {
+            var swappedBaseUrl = TrySwapApiVersion(baseUrl);
+            if (!string.IsNullOrWhiteSpace(swappedBaseUrl) && !swappedBaseUrl.Equals(baseUrl, StringComparison.OrdinalIgnoreCase))
+            {
+                var swappedUrl = BuildGenerateContentUrl(swappedBaseUrl, usedModel, qp, apiKey);
+                var (swappedStatus, swappedJson) = await PostAsync(http, swappedUrl, headerName, apiKey, requestBody, cancellationToken);
+
+                // Prefer the fallback response if it succeeded or provides a clearer payload.
+                if (swappedStatus is >= 200 and <= 299 ||
+                    swappedStatus != (int)HttpStatusCode.BadRequest ||
+                    !string.IsNullOrWhiteSpace(ExtractUpstreamError(swappedJson)))
                 {
                     return ToResult(swappedStatus, swappedJson, swappedUrl, usedModel);
                 }
@@ -240,6 +262,28 @@ public sealed class GeminiClient : IGeminiClient
             .FirstOrDefault()?
             .Text?
             .Trim();
+    }
+
+    private static bool LooksLikeUnsupportedFieldError(string? upstreamError)
+    {
+        var s = (upstreamError ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(s)) return false;
+
+        // Examples include:
+        // - "Invalid JSON payload received. Unknown name \"generationConfig\" ..."
+        // - "Unknown name \"systemInstruction\" ..."
+        // - field names echoed in snake_case: response_mime_type / response_schema
+        var lower = s.ToLowerInvariant();
+        if (!(lower.Contains("unknown name") || lower.Contains("cannot find field") || lower.Contains("unrecognized field")))
+            return false;
+
+        return lower.Contains("generationconfig") ||
+               lower.Contains("responsemimetype") ||
+               lower.Contains("responseschema") ||
+               lower.Contains("systeminstruction") ||
+               lower.Contains("response_mime_type") ||
+               lower.Contains("response_schema") ||
+               lower.Contains("system_instruction");
     }
 }
 

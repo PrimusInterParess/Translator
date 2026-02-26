@@ -119,13 +119,7 @@ public sealed class GeminiVerbFormsService : IVerbFormsService
 
     private static JsonObject BuildGenerateContentRequest(string systemInstruction, string prompt)
     {
-        // `generativelanguage.googleapis.com/v1` does not accept `systemInstruction` or
-        // JSON schema/mime response fields. Fold the instruction into the user prompt.
-        var fullPrompt = string.IsNullOrWhiteSpace(systemInstruction)
-            ? prompt
-            : $"{systemInstruction}\n\n{prompt}";
-
-        return new JsonObject
+        var req = new JsonObject
         {
             ["contents"] = new JsonArray
             {
@@ -134,11 +128,44 @@ public sealed class GeminiVerbFormsService : IVerbFormsService
                     ["role"] = "user",
                     ["parts"] = new JsonArray
                     {
-                        new JsonObject { ["text"] = fullPrompt }
+                        new JsonObject { ["text"] = prompt }
                     }
                 }
             }
         };
+
+        if (!string.IsNullOrWhiteSpace(systemInstruction))
+        {
+            req["systemInstruction"] = new JsonObject
+            {
+                ["role"] = "system",
+                ["parts"] = new JsonArray
+                {
+                    new JsonObject { ["text"] = systemInstruction }
+                }
+            };
+        }
+
+        req["generationConfig"] = new JsonObject
+        {
+            ["responseMimeType"] = "application/json",
+            ["responseSchema"] = new JsonObject
+            {
+                ["type"] = "OBJECT",
+                ["properties"] = new JsonObject
+                {
+                    ["infinitive"] = new JsonObject { ["type"] = "STRING" },
+                    ["present"] = new JsonObject { ["type"] = "STRING" },
+                    ["past"] = new JsonObject { ["type"] = "STRING" },
+                    ["pastParticiple"] = new JsonObject { ["type"] = "STRING" },
+                    ["imperative"] = new JsonObject { ["type"] = "STRING" }
+                },
+                ["required"] = new JsonArray { "infinitive", "present", "past", "pastParticiple", "imperative" },
+                ["additionalProperties"] = false
+            }
+        };
+
+        return req;
     }
 
     private static string BuildPrompt(string template, string verb)

@@ -102,6 +102,10 @@ Gemini__Model=gemini-2.5-flash-lite
 Gemini__GenerateContentBaseUrl=https://generativelanguage.googleapis.com/v1/models
 Gemini__EnableApiVersionFallback=true
 
+# Note: `/verbforms/gemini` uses Gemini JSON mode (response MIME type `application/json` + schema).
+# If your configured base URL rejects these fields (often as HTTP 400 "Unknown name ..."),
+# the proxy will retry once by swapping `/v1/` ↔ `/v1beta/`.
+
 PORT=8788
 ```
 
@@ -246,7 +250,7 @@ Optional publishing:
 - Gemini settings:
   - `Gemini:Model` (env var: `Gemini__Model`) default: `gemini-2.5-flash-lite`
   - `Gemini:GenerateContentBaseUrl` (env var: `Gemini__GenerateContentBaseUrl`) default: `https://generativelanguage.googleapis.com/v1/models`
-  - `Gemini:EnableApiVersionFallback` (env var: `Gemini__EnableApiVersionFallback`) default: `true` (retries once with `v1` ↔ `v1beta` on 404)
+  - `Gemini:EnableApiVersionFallback` (env var: `Gemini__EnableApiVersionFallback`) default: `true` (retries once with `v1` ↔ `v1beta` on 404, and on certain 400 errors when the endpoint rejects JSON-mode fields)
 - You can create a free Gemini key in Google AI Studio (no credit card): `https://aistudio.google.com/app/apikey`
 - Keep keys in `appsettings.Development.local.json` (or env vars). Avoid committing keys into `appsettings.json`.
 
