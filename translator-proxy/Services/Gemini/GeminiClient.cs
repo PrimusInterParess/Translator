@@ -50,7 +50,7 @@ public sealed class GeminiClient : IGeminiClient
         if (string.IsNullOrWhiteSpace(usedModel))
             usedModel = "gemini-2.0-flash";
 
-        // Allow both "gemini-1.5-flash" and "models/gemini-1.5-flash" inputs.
+        // Allow both "gemini-2.0-flash" and "models/gemini-2.0-flash" inputs.
         // `GenerateContentBaseUrl` already points at ".../models".
         var slash = usedModel.LastIndexOf('/');
         if (slash >= 0 && slash < usedModel.Length - 1)

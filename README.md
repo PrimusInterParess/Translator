@@ -95,7 +95,7 @@ Tts__Google__ApiKey=YOUR_KEY_HERE
 
 # Gemini API (proxy `/verbforms/gemini`)
 Gemini__ApiKey=YOUR_KEY_HERE
-Gemini__Model=gemini-flash-latest
+Gemini__Model=gemini-2.0-flash
 Gemini__GenerateContentBaseUrl=https://generativelanguage.googleapis.com/v1/models
 
 PORT=8788

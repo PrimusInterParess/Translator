@@ -12,5 +12,5 @@ services:
       Tts__Google__ApiKey: ${Tts__Google__ApiKey}
       # Gemini__ApiKey=...
       Gemini__ApiKey: ${Gemini__ApiKey}
-      Gemini__Model: ${Gemini__Model:-gemini-1.5-flash}
+      Gemini__Model: ${Gemini__Model:-gemini-2.0-flash}
       PORT: ${PORT:-8788}
