@@ -7,7 +7,6 @@ importScripts(
   'shared/lang.js',
   'shared/text.js',
   'shared/messages.js',
-  'shared/httpClient.js',
   'shared/translationsRepo.js',
   'background/mymemory.js',
   'background/resultWindow.js',

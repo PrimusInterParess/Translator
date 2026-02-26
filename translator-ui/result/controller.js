@@ -142,7 +142,6 @@
 
       let ttsAvailable = false;
       let ttsVoiceCount = 0;
-      let ttsProvider = '';
       let lastDetectedSourceLang = '';
       let autoCloseTimerId = null;
 

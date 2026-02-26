@@ -162,7 +162,6 @@
 
       let ttsAvailable = false;
       let ttsVoiceCount = 0;
-      let ttsProvider = '';
       OM.runtime
         .sendMessage({ type: 'ttsInfo' })
         .then((info) => {
@@ -176,7 +175,6 @@
           }
           ttsAvailable = info.available === true;
           ttsVoiceCount = typeof info.voiceCount === 'number' ? info.voiceCount : 0;
-          ttsProvider = typeof info.provider === 'string' ? info.provider : '';
         })
         .catch(() => { });
       speakBtn.addEventListener('mousedown', stop);

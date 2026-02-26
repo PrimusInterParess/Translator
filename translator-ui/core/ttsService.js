@@ -67,7 +67,7 @@
 
           if (data?.ok === true && data?.audio?.base64) return data;
           // Proxy returned invalid response; fall back to OS/Chrome TTS below.
-        } catch (err) {
+        } catch {
           // Proxy network error; fall back to OS/Chrome TTS below.
         }
       }
