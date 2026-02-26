@@ -1,0 +1,22 @@
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  width: 100%;
+  max-height: none;
+}
+
+body {
+  padding: 12px;
+}
+
+.card {
+  padding: 12px;
+}
+
+.outputBox {
+  max-height: 340px;
+}
+

@@ -1,0 +1,2 @@
+OM.popupController.init().catch(() => { });
+

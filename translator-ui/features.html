@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="controls.css" />
+  <link rel="stylesheet" href="features.css" />
+</head>
+
+<body>
+  <div class="card">
+    <h1 class="appTitle">OversætMig — Features</h1>
+
+    <label>Verb forms (Gemini)</label>
+    <textarea id="verbFormsTextInput" rows="3" placeholder="Type a verb or phrase…"></textarea>
+    <button id="verbFormsBtn" type="button" class="primaryBtn">Get verb forms</button>
+    <div id="verbFormsStatus" class="hint" aria-live="polite"></div>
+    <div id="verbFormsOutput" class="outputBox" aria-live="polite"></div>
+
+    <div class="divider"></div>
+
+    <label>Explain phrase (Gemini)</label>
+    <textarea id="explainTextInput" rows="3" placeholder="Type a phrase or fragment…"></textarea>
+    <textarea id="explainContextInput" rows="3" placeholder="Optional context (sentence/paragraph)…"></textarea>
+
+    <div class="inlineRow">
+      <div class="inlineCol">
+        <label class="inlineLabel">Source lang (optional)</label>
+        <input id="explainSourceLangInput" type="text" inputmode="latin" placeholder="da" />
+      </div>
+      <div class="inlineCol">
+        <label class="inlineLabel">Explain in</label>
+        <input id="explainInInput" type="text" inputmode="latin" placeholder="en" />
+      </div>
+    </div>
+
+    <button id="explainBtn" type="button" class="primaryBtn">Explain</button>
+    <div id="explainStatus" class="hint" aria-live="polite"></div>
+    <div id="explainOutput" class="outputBox" aria-live="polite"></div>
+  </div>
+
+  <script src="shared/om.js"></script>
+  <script src="shared/constants.js"></script>
+  <script src="shared/storage.js"></script>
+  <script src="shared/settings.js"></script>
+  <script src="popup/controller.js"></script>
+  <script src="features.js"></script>
+</body>
+
+</html>
+

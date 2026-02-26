@@ -76,13 +76,26 @@
     const explainBtn = document.getElementById('explainBtn');
     const explainStatus = document.getElementById('explainStatus');
     const explainOutput = document.getElementById('explainOutput');
+    const openFeaturesWindowBtn = document.getElementById('openFeaturesWindowBtn');
+
+    if (openFeaturesWindowBtn) {
+      openFeaturesWindowBtn.addEventListener('click', async () => {
+        const url = chrome.runtime.getURL('features.html');
+        await chrome.windows.create({
+          url,
+          type: 'popup',
+          width: 420,
+          height: 720,
+        });
+      });
+    }
 
     const settings = await OM.settings.get();
 
     if (enabledToggle) enabledToggle.checked = settings.enabled !== false;
-    if (settings.email) emailInput.value = settings.email;
-    sourceSelect.value = settings.sourceLang || C.DEFAULTS.sourceLang;
-    targetSelect.value = settings.targetLang || C.DEFAULTS.targetLang;
+    if (emailInput && settings.email) emailInput.value = settings.email;
+    if (sourceSelect) sourceSelect.value = settings.sourceLang || C.DEFAULTS.sourceLang;
+    if (targetSelect) targetSelect.value = settings.targetLang || C.DEFAULTS.targetLang;
     if (ttsProviderSelect) ttsProviderSelect.value = settings.ttsProvider || C.DEFAULTS.ttsProvider;
 
     if (holdToTranslateMsInput) {
@@ -152,17 +165,21 @@
       });
     }
 
-    OM.popupSelectEnhancer.enhanceSelect(sourceSelect, {
-      onChange: async (value) => {
-        await OM.settings.setSourceLang(value);
-      },
-    });
+    if (sourceSelect) {
+      OM.popupSelectEnhancer.enhanceSelect(sourceSelect, {
+        onChange: async (value) => {
+          await OM.settings.setSourceLang(value);
+        },
+      });
+    }
 
-    OM.popupSelectEnhancer.enhanceSelect(targetSelect, {
-      onChange: async (value) => {
-        await OM.settings.setTargetLang(value);
-      },
-    });
+    if (targetSelect) {
+      OM.popupSelectEnhancer.enhanceSelect(targetSelect, {
+        onChange: async (value) => {
+          await OM.settings.setTargetLang(value);
+        },
+      });
+    }
 
     if (ttsProviderSelect) {
       OM.popupSelectEnhancer.enhanceSelect(ttsProviderSelect, {
@@ -173,16 +190,18 @@
       });
     }
 
-    const persistEmail = async () => {
-      await OM.settings.setEmail(emailInput.value);
-    };
+    if (emailInput) {
+      const persistEmail = async () => {
+        await OM.settings.setEmail(emailInput.value);
+      };
 
-    emailInput.addEventListener('change', () => {
-      persistEmail().catch(() => { });
-    });
-    emailInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') persistEmail().catch(() => { });
-    });
+      emailInput.addEventListener('change', () => {
+        persistEmail().catch(() => { });
+      });
+      emailInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') persistEmail().catch(() => { });
+      });
+    }
 
     if (ttsRateInput) {
       const persistRate = async () => {

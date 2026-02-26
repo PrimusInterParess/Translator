@@ -265,6 +265,23 @@ input[type="range"]:focus {
   opacity: 0.6;
 }
 
+.secondaryBtn {
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.55);
+  color: rgba(0, 0, 0, 0.88);
+  font: inherit;
+  cursor: pointer;
+}
+.secondaryBtn:hover {
+  background: rgba(255, 255, 255, 0.7);
+}
+.secondaryBtn:active {
+  background: rgba(255, 255, 255, 0.8);
+}
+
 .outputBox {
   margin: 8px 0 0;
   padding: 10px 12px;
