@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Net.Http.Headers;
 using Microsoft.Extensions.Options;
 
 namespace translator_proxy.Services.Gemini;
@@ -35,28 +36,40 @@ public sealed class GeminiClient : IGeminiClient
 
         var baseUrl = (opts.GenerateContentBaseUrl ?? string.Empty).Trim().TrimEnd('/');
         if (string.IsNullOrWhiteSpace(baseUrl))
-            baseUrl = "https://generativelanguage.googleapis.com/v1beta/models";
+            baseUrl = "https://generativelanguage.googleapis.com/v1/models";
 
+        var headerName = (opts.ApiKeyHeaderName ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(headerName)) headerName = "x-goog-api-key";
+
+        // Optional legacy mode (discouraged): pass API key via query string.
+        // Keep empty by default to avoid leaking secrets into logs (HttpClient logs include URLs).
         var qp = (opts.ApiKeyQueryParamName ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(qp)) qp = "key";
 
         var usedModel = (model ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(usedModel))
             usedModel = opts.Model;
         if (string.IsNullOrWhiteSpace(usedModel))
-            usedModel = "gemini-1.5-flash";
+            usedModel = "gemini-flash-latest";
 
-        var url =
-            $"{baseUrl}/{Uri.EscapeDataString(usedModel)}:generateContent" +
-            $"?{Uri.EscapeDataString(qp)}={Uri.EscapeDataString(apiKey)}";
+        var url = $"{baseUrl}/{Uri.EscapeDataString(usedModel)}:generateContent";
+        if (!string.IsNullOrWhiteSpace(qp))
+        {
+            url += $"?{Uri.EscapeDataString(qp)}={Uri.EscapeDataString(apiKey)}";
+        }
 
         var http = _httpClientFactory.CreateClient();
-        using var response = await http.PostAsJsonAsync(
-            url,
-            requestBody,
-            options: new JsonSerializerOptions(JsonSerializerDefaults.Web),
-            cancellationToken: cancellationToken
-        );
+
+        using var req = new HttpRequestMessage(HttpMethod.Post, url)
+        {
+            Content = JsonContent.Create(
+                requestBody,
+                mediaType: new MediaTypeHeaderValue("application/json"),
+                options: new JsonSerializerOptions(JsonSerializerDefaults.Web)
+            )
+        };
+        req.Headers.TryAddWithoutValidation(headerName, apiKey);
+
+        using var response = await http.SendAsync(req, cancellationToken);
 
         GeminiGenerateContentResponse? json = null;
         try
