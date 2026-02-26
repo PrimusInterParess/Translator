@@ -36,7 +36,9 @@ public sealed class GeminiClient : IGeminiClient
 
         var baseUrl = (opts.GenerateContentBaseUrl ?? string.Empty).Trim().TrimEnd('/');
         if (string.IsNullOrWhiteSpace(baseUrl))
-            baseUrl = "https://generativelanguage.googleapis.com/v1/models";
+            baseUrl = "https://generativelanguage.googleapis.com/v1beta";
+        if (!baseUrl.EndsWith("/models", StringComparison.OrdinalIgnoreCase))
+            baseUrl = $"{baseUrl}/models";
 
         var headerName = (opts.ApiKeyHeaderName ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(headerName)) headerName = "x-goog-api-key";
@@ -49,7 +51,13 @@ public sealed class GeminiClient : IGeminiClient
         if (string.IsNullOrWhiteSpace(usedModel))
             usedModel = opts.Model;
         if (string.IsNullOrWhiteSpace(usedModel))
-            usedModel = "gemini-flash-latest";
+            usedModel = "gemini-1.5-flash";
+
+        // Allow both "gemini-1.5-flash" and "models/gemini-1.5-flash" inputs.
+        // `GenerateContentBaseUrl` already points at ".../models".
+        var slash = usedModel.LastIndexOf('/');
+        if (slash >= 0 && slash < usedModel.Length - 1)
+            usedModel = usedModel[(slash + 1)..];
 
         var url = $"{baseUrl}/{Uri.EscapeDataString(usedModel)}:generateContent";
         if (!string.IsNullOrWhiteSpace(qp))
