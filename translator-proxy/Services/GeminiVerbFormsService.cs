@@ -119,41 +119,23 @@ public sealed class GeminiVerbFormsService : IVerbFormsService
 
     private static JsonObject BuildGenerateContentRequest(string systemInstruction, string prompt)
     {
-        // Use explicit snake_case JSON field names required by the REST API.
+        // `generativelanguage.googleapis.com/v1` does not accept `systemInstruction` or
+        // JSON schema/mime response fields. Fold the instruction into the user prompt.
+        var fullPrompt = string.IsNullOrWhiteSpace(systemInstruction)
+            ? prompt
+            : $"{systemInstruction}\n\n{prompt}";
+
         return new JsonObject
         {
-            ["systemInstruction"] = new JsonObject
-            {
-                ["parts"] = new JsonArray
-                {
-                    new JsonObject { ["text"] = systemInstruction }
-                }
-            },
             ["contents"] = new JsonArray
             {
                 new JsonObject
                 {
+                    ["role"] = "user",
                     ["parts"] = new JsonArray
                     {
-                        new JsonObject { ["text"] = prompt }
+                        new JsonObject { ["text"] = fullPrompt }
                     }
-                }
-            },
-            ["generationConfig"] = new JsonObject
-            {
-                ["response_mime_type"] = "application/json",
-                ["response_schema"] = new JsonObject
-                {
-                    ["type"] = "OBJECT",
-                    ["properties"] = new JsonObject
-                    {
-                        ["infinitive"] = new JsonObject { ["type"] = "STRING" },
-                        ["present"] = new JsonObject { ["type"] = "STRING" },
-                        ["past"] = new JsonObject { ["type"] = "STRING" },
-                        ["pastParticiple"] = new JsonObject { ["type"] = "STRING" },
-                        ["imperative"] = new JsonObject { ["type"] = "STRING" }
-                    },
-                    ["required"] = new JsonArray { "infinitive", "present", "past", "pastParticiple", "imperative" }
                 }
             }
         };
