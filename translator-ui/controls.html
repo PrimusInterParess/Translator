@@ -10,71 +10,100 @@
   <div class="card">
     <h1 class="appTitle">OversætMig</h1>
 
-    <div class="toggleRow">
-      <label class="toggleLabel" for="enabledToggle">Extension enabled</label>
-      <input id="enabledToggle" type="checkbox" />
-    </div>
-    <div class="hint">When disabled, the on-page selection popup won’t appear.</div>
+    <details class="section" id="optionsSection">
+      <summary class="sectionHeader">Options</summary>
+      <div class="sectionBody">
+        <div class="toggleRow">
+          <label class="toggleLabel" for="enabledToggle">Extension enabled</label>
+          <input id="enabledToggle" type="checkbox" />
+        </div>
+        <div class="hint">When disabled, the on-page selection popup won’t appear.</div>
 
-    <label>Selection hold delay <span class="rangeValue" id="holdToTranslateMsValue"></span></label>
-    <input id="holdToTranslateMsInput" type="range" min="0" max="5000" step="100" />
-    <div class="hint">How long you must keep a selection before the on-page popup opens.</div>
+        <label>Selection hold delay <span class="rangeValue" id="holdToTranslateMsValue"></span></label>
+        <input id="holdToTranslateMsInput" type="range" min="0" max="5000" step="100" />
+        <div class="hint">How long you must keep a selection before the on-page popup opens.</div>
 
-    <label>Result window auto-close <span class="rangeValue" id="resultAutoCloseMsValue"></span></label>
-    <input id="resultAutoCloseMsInput" type="range" min="0" max="300000" step="1000" />
-    <div class="hint">0 = never close automatically.</div>
+        <label>Result window auto-close <span class="rangeValue" id="resultAutoCloseMsValue"></span></label>
+        <input id="resultAutoCloseMsInput" type="range" min="0" max="300000" step="1000" />
+        <div class="hint">0 = never close automatically.</div>
 
-    <label>Email (MyMemory quota)</label>
-    <input id="emailInput" type="email" placeholder="you@gmail.com" />
+        <label>Email (MyMemory quota)</label>
+        <input id="emailInput" type="email" placeholder="you@gmail.com" />
 
-    <label>Translate from</label>
-    <div class="selectWrap" data-for="sourceLangSelect">
-      <button type="button" class="selectBtn" aria-haspopup="listbox" aria-expanded="false"></button>
-      <div class="selectList" role="listbox"></div>
-      <select id="sourceLangSelect">
-        <option value="da">Danish</option>
-        <option value="bg">Bulgarian</option>
-        <option value="en">English</option>
-        <option value="auto">Auto (guess)</option>
-      </select>
-    </div>
+        <label>Translate from</label>
+        <div class="selectWrap" data-for="sourceLangSelect">
+          <button type="button" class="selectBtn" aria-haspopup="listbox" aria-expanded="false"></button>
+          <div class="selectList" role="listbox"></div>
+          <select id="sourceLangSelect">
+            <option value="da">Danish</option>
+            <option value="bg">Bulgarian</option>
+            <option value="en">English</option>
+            <option value="auto">Auto (guess)</option>
+          </select>
+        </div>
 
-    <label>Translate to</label>
-    <div class="selectWrap" data-for="targetLangSelect">
-      <button type="button" class="selectBtn" aria-haspopup="listbox" aria-expanded="false"></button>
-      <div class="selectList" role="listbox"></div>
-      <select id="targetLangSelect">
-        <option value="bg">Bulgarian</option>
-        <option value="en">English</option>
-        <option value="da">Danish</option>
-      </select>
-    </div>
+        <label>Translate to</label>
+        <div class="selectWrap" data-for="targetLangSelect">
+          <button type="button" class="selectBtn" aria-haspopup="listbox" aria-expanded="false"></button>
+          <div class="selectList" role="listbox"></div>
+          <select id="targetLangSelect">
+            <option value="bg">Bulgarian</option>
+            <option value="en">English</option>
+            <option value="da">Danish</option>
+          </select>
+        </div>
 
-    <label>Pronunciation speed <span class="rangeValue" id="ttsRateValue"></span></label>
-    <input id="ttsRateInput" type="range" min="0.7" max="1.4" step="0.05" />
-    <div class="hint">Lower is slower. If it sounds odd, try 1.00.</div>
+        <label>Pronunciation speed <span class="rangeValue" id="ttsRateValue"></span></label>
+        <input id="ttsRateInput" type="range" min="0.7" max="1.4" step="0.05" />
+        <div class="hint">Lower is slower. If it sounds odd, try 1.00.</div>
 
-    <label>Pronunciation volume <span class="rangeValue" id="ttsVolumeValue"></span></label>
-    <input id="ttsVolumeInput" type="range" min="0.2" max="1" step="0.05" />
-    <div class="hint">If it feels sharp, lower volume.</div>
+        <label>Pronunciation volume <span class="rangeValue" id="ttsVolumeValue"></span></label>
+        <input id="ttsVolumeInput" type="range" min="0.2" max="1" step="0.05" />
+        <div class="hint">If it feels sharp, lower volume.</div>
 
-    <label>Pronunciation voice</label>
-    <div class="selectWrap" data-for="ttsProviderSelect">
-      <button type="button" class="selectBtn" aria-haspopup="listbox" aria-expanded="false"></button>
-      <div class="selectList" role="listbox"></div>
-      <select id="ttsProviderSelect">
-        <option value="proxy">High quality voice (recommended)</option>
-        <option value="browser">Browser / OS voice</option>
-      </select>
-    </div>
+        <label>Pronunciation voice</label>
+        <div class="selectWrap" data-for="ttsProviderSelect">
+          <button type="button" class="selectBtn" aria-haspopup="listbox" aria-expanded="false"></button>
+          <div class="selectList" role="listbox"></div>
+          <select id="ttsProviderSelect">
+            <option value="proxy">High quality voice (recommended)</option>
+            <option value="browser">Browser / OS voice</option>
+          </select>
+        </div>
+      </div>
+    </details>
 
-    <div class="divider"></div>
+    <details class="section" id="featuresSection">
+      <summary class="sectionHeader">Features</summary>
+      <div class="sectionBody">
+        <label>Verb forms (Gemini)</label>
+        <textarea id="verbFormsTextInput" rows="2" placeholder="Type a verb or phrase…"></textarea>
+        <button id="verbFormsBtn" type="button" class="primaryBtn">Get verb forms</button>
+        <div id="verbFormsStatus" class="hint" aria-live="polite"></div>
+        <div id="verbFormsOutput" class="outputBox" aria-live="polite"></div>
 
-    <label>Verb forms (Gemini)</label>
-    <textarea id="verbFormsTextInput" rows="2" placeholder="Type a verb or phrase…"></textarea>
-    <button id="verbFormsBtn" type="button" class="primaryBtn">Get verb forms</button>
-    <div id="verbFormsStatus" class="hint" aria-live="polite"></div>
-    <pre id="verbFormsOutput" class="outputBox" aria-live="polite"></pre>
+        <div class="divider"></div>
+
+        <label>Explain phrase (Gemini)</label>
+        <textarea id="explainTextInput" rows="2" placeholder="Type a phrase or fragment…"></textarea>
+        <textarea id="explainContextInput" rows="2" placeholder="Optional context (sentence/paragraph)…"></textarea>
+
+        <div class="inlineRow">
+          <div class="inlineCol">
+            <label class="inlineLabel">Source lang (optional)</label>
+            <input id="explainSourceLangInput" type="text" inputmode="latin" placeholder="da" />
+          </div>
+          <div class="inlineCol">
+            <label class="inlineLabel">Explain in</label>
+            <input id="explainInInput" type="text" inputmode="latin" placeholder="en" />
+          </div>
+        </div>
+
+        <button id="explainBtn" type="button" class="primaryBtn">Explain</button>
+        <div id="explainStatus" class="hint" aria-live="polite"></div>
+        <div id="explainOutput" class="outputBox" aria-live="polite"></div>
+      </div>
+    </details>
   </div>
   <script src="shared/om.js"></script>
   <script src="shared/constants.js"></script>

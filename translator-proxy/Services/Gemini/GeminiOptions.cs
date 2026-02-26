@@ -29,6 +29,7 @@ public sealed class GeminiOptions
     public string ApiKeyQueryParamName { get; set; } = "";
 
     public VerbFormsOptions VerbForms { get; set; } = new();
+    public ExplainOptions Explain { get; set; } = new();
 
     public sealed class VerbFormsOptions
     {
@@ -37,6 +38,15 @@ public sealed class GeminiOptions
 
         public string PromptTemplate { get; set; } =
             "Verb: {verb}";
+    }
+
+    public sealed class ExplainOptions
+    {
+        public string SystemInstruction { get; set; } =
+            "You explain phrases or partial sentences. Return ONLY valid JSON matching the schema.";
+
+        public string PromptTemplate { get; set; } =
+            "Explain in: {explainIn}\nSource language (if known): {sourceLang}\nText: {text}\nContext: {context}";
     }
 }
 

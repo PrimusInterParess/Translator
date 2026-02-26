@@ -12,6 +12,7 @@ Chrome/Edge translation helper extension (**`translator-ui/`**) with an optional
 - **`translator-proxy/`**: ASP.NET Core (net8.0) Web API that exposes:
   - `POST /translate/mymemory`
   - `POST /verbforms/gemini`
+  - `POST /explain/gemini`
   - `POST /tts`
   on `http://127.0.0.1:8788`
 
@@ -143,6 +144,25 @@ Example:
 curl -Method POST "http://127.0.0.1:8788/verbforms/gemini" `
   -ContentType "application/json" `
   -Body '{"text":"at spise"}'
+```
+
+### `POST /explain/gemini` (Explain a phrase/fragment)
+
+- Request:
+  - `text` (required, max 500 chars)
+  - `context` (optional, max 2000 chars)
+  - `sourceLang` (optional, e.g. `"da"`)
+  - `explainIn` (optional, defaults to `"en"`)
+- Response (ok):
+  - `summary`, `what`, `when`, `why`
+  - `notes` (array), `alternatives` (array), `examples` (array of `{ source, meaning }`)
+
+Example:
+
+```powershell
+curl -Method POST "http://127.0.0.1:8788/explain/gemini" `
+  -ContentType "application/json" `
+  -Body '{"text":"det kan jeg godt","context":"Det kan jeg godt, men ikke i dag.","sourceLang":"da","explainIn":"en"}'
 ```
 
 ### `POST /tts`

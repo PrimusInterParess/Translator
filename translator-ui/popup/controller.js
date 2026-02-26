@@ -35,6 +35,17 @@
   };
 
   async function init() {
+    const optionsSection = document.getElementById('optionsSection');
+    const featuresSection = document.getElementById('featuresSection');
+
+    if (optionsSection && featuresSection) {
+      const syncAccordion = (opened, other) => {
+        if (opened?.open) other.open = false;
+      };
+      optionsSection.addEventListener('toggle', () => syncAccordion(optionsSection, featuresSection));
+      featuresSection.addEventListener('toggle', () => syncAccordion(featuresSection, optionsSection));
+    }
+
     const sourceSelect = document.getElementById('sourceLangSelect');
     const targetSelect = document.getElementById('targetLangSelect');
     const emailInput = document.getElementById('emailInput');
@@ -58,6 +69,13 @@
     const verbFormsBtn = document.getElementById('verbFormsBtn');
     const verbFormsStatus = document.getElementById('verbFormsStatus');
     const verbFormsOutput = document.getElementById('verbFormsOutput');
+    const explainTextInput = document.getElementById('explainTextInput');
+    const explainContextInput = document.getElementById('explainContextInput');
+    const explainSourceLangInput = document.getElementById('explainSourceLangInput');
+    const explainInInput = document.getElementById('explainInInput');
+    const explainBtn = document.getElementById('explainBtn');
+    const explainStatus = document.getElementById('explainStatus');
+    const explainOutput = document.getElementById('explainOutput');
 
     const settings = await OM.settings.get();
 
@@ -104,7 +122,7 @@
 
     if (enabledToggle) {
       enabledToggle.addEventListener('change', () => {
-        OM.settings.setEnabled(enabledToggle.checked).catch(() => {});
+        OM.settings.setEnabled(enabledToggle.checked).catch(() => { });
       });
     }
 
@@ -116,7 +134,7 @@
         if (holdToTranslateMsValue) holdToTranslateMsValue.textContent = formatHoldDelay(holdToTranslateMsInput.value);
       });
       holdToTranslateMsInput.addEventListener('change', () => {
-        persistHoldDelay().catch(() => {});
+        persistHoldDelay().catch(() => { });
       });
     }
 
@@ -130,7 +148,7 @@
         }
       });
       resultAutoCloseMsInput.addEventListener('change', () => {
-        persistAutoClose().catch(() => {});
+        persistAutoClose().catch(() => { });
       });
     }
 
@@ -160,10 +178,10 @@
     };
 
     emailInput.addEventListener('change', () => {
-      persistEmail().catch(() => {});
+      persistEmail().catch(() => { });
     });
     emailInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') persistEmail().catch(() => {});
+      if (e.key === 'Enter') persistEmail().catch(() => { });
     });
 
     if (ttsRateInput) {
@@ -174,7 +192,7 @@
         if (ttsRateValue) ttsRateValue.textContent = formatRate(ttsRateInput.value);
       });
       ttsRateInput.addEventListener('change', () => {
-        persistRate().catch(() => {});
+        persistRate().catch(() => { });
       });
     }
 
@@ -186,7 +204,7 @@
         if (ttsVolumeValue) ttsVolumeValue.textContent = formatVolume(ttsVolumeInput.value);
       });
       ttsVolumeInput.addEventListener('change', () => {
-        persistVolume().catch(() => {});
+        persistVolume().catch(() => { });
       });
     }
 
@@ -198,14 +216,14 @@
       googleLanguageCodeInput.addEventListener('input', () => {
         clearTimeout(langDebounceId);
         langDebounceId = setTimeout(() => {
-          persistLang().catch(() => {});
+          persistLang().catch(() => { });
         }, 350);
       });
       googleLanguageCodeInput.addEventListener('change', () => {
-        persistLang().catch(() => {});
+        persistLang().catch(() => { });
       });
       googleLanguageCodeInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') persistLang().catch(() => {});
+        if (e.key === 'Enter') persistLang().catch(() => { });
       });
     }
 
@@ -217,14 +235,14 @@
       googleVoiceNameInput.addEventListener('input', () => {
         clearTimeout(voiceDebounceId);
         voiceDebounceId = setTimeout(() => {
-          persistVoice().catch(() => {});
+          persistVoice().catch(() => { });
         }, 350);
       });
       googleVoiceNameInput.addEventListener('change', () => {
-        persistVoice().catch(() => {});
+        persistVoice().catch(() => { });
       });
       googleVoiceNameInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') persistVoice().catch(() => {});
+        if (e.key === 'Enter') persistVoice().catch(() => { });
       });
     }
 
@@ -236,8 +254,15 @@
         if (googlePitchValue) googlePitchValue.textContent = formatPitch(googlePitchInput.value);
       });
       googlePitchInput.addEventListener('change', () => {
-        persistPitch().catch(() => {});
+        persistPitch().catch(() => { });
       });
+    }
+
+    if (explainSourceLangInput && !String(explainSourceLangInput.value || '').trim()) {
+      explainSourceLangInput.value = String(settings.sourceLang || C.DEFAULTS.sourceLang || '').trim();
+    }
+    if (explainInInput && !String(explainInInput.value || '').trim()) {
+      explainInInput.value = 'en';
     }
 
     if (ttsProxyUrlInput) {
@@ -248,14 +273,14 @@
       ttsProxyUrlInput.addEventListener('input', () => {
         clearTimeout(proxyDebounceId);
         proxyDebounceId = setTimeout(() => {
-          persistProxyUrl().catch(() => {});
+          persistProxyUrl().catch(() => { });
         }, 350);
       });
       ttsProxyUrlInput.addEventListener('change', () => {
-        persistProxyUrl().catch(() => {});
+        persistProxyUrl().catch(() => { });
       });
       ttsProxyUrlInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') persistProxyUrl().catch(() => {});
+        if (e.key === 'Enter') persistProxyUrl().catch(() => { });
       });
     }
 
@@ -264,19 +289,79 @@
         if (verbFormsStatus) verbFormsStatus.textContent = msg || '';
       };
 
-      const setOutput = (v) => {
-        if (v == null) {
-          verbFormsOutput.textContent = '';
-          return;
-        }
-        if (typeof v === 'string') {
-          verbFormsOutput.textContent = v;
-          return;
-        }
+      const clearOutput = () => {
+        verbFormsOutput.textContent = '';
         try {
-          verbFormsOutput.textContent = JSON.stringify(v, null, 2);
+          verbFormsOutput.replaceChildren();
         } catch {
-          verbFormsOutput.textContent = String(v);
+          while (verbFormsOutput.firstChild) verbFormsOutput.removeChild(verbFormsOutput.firstChild);
+        }
+      };
+
+      const setRawOutput = (v) => {
+        const pre = document.createElement('pre');
+        pre.textContent = String(v ?? '');
+        verbFormsOutput.appendChild(pre);
+      };
+
+      const isVerbFormsResponse = (v) => {
+        if (!v || typeof v !== 'object') return false;
+        if (v.ok !== true) return false;
+        return (
+          typeof v.infinitive === 'string' &&
+          typeof v.present === 'string' &&
+          typeof v.past === 'string' &&
+          typeof v.pastParticiple === 'string' &&
+          typeof v.imperative === 'string'
+        );
+      };
+
+      const renderVerbForms = (v) => {
+        const header = document.createElement('div');
+        header.className = 'verbFormsHeader';
+        header.textContent = 'Verb forms';
+
+        const grid = document.createElement('div');
+        grid.className = 'verbFormsGrid';
+
+        const addRow = (label, value) => {
+          const l = document.createElement('div');
+          l.className = 'verbFormsLabel';
+          l.textContent = label;
+          const val = document.createElement('div');
+          val.className = 'verbFormsValue';
+          val.textContent = value;
+          grid.append(l, val);
+        };
+
+        const infinitive = String(v.infinitive || '').trim();
+        addRow('Infinitive', infinitive ? `at ${infinitive}` : '');
+        addRow('Present', String(v.present || '').trim());
+        addRow('Past', String(v.past || '').trim());
+        addRow('Past participle', String(v.pastParticiple || '').trim());
+        addRow('Imperative', String(v.imperative || '').trim());
+
+        verbFormsOutput.append(header, grid);
+      };
+
+      const setOutput = (v) => {
+        clearOutput();
+        if (v == null) return;
+
+        if (typeof v === 'string') {
+          setRawOutput(v);
+          return;
+        }
+
+        if (isVerbFormsResponse(v)) {
+          renderVerbForms(v);
+          return;
+        }
+
+        try {
+          setRawOutput(JSON.stringify(v, null, 2));
+        } catch {
+          setRawOutput(String(v));
         }
       };
 
@@ -329,6 +414,217 @@
 
       verbFormsTextInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) verbFormsBtn.click();
+      });
+    }
+
+    if (explainBtn && explainTextInput && explainOutput) {
+      const setStatus = (msg) => {
+        if (explainStatus) explainStatus.textContent = msg || '';
+      };
+
+      const clearOutput = () => {
+        explainOutput.textContent = '';
+        try {
+          explainOutput.replaceChildren();
+        } catch {
+          while (explainOutput.firstChild) explainOutput.removeChild(explainOutput.firstChild);
+        }
+      };
+
+      const setRawOutput = (v) => {
+        const pre = document.createElement('pre');
+        pre.textContent = String(v ?? '');
+        explainOutput.appendChild(pre);
+      };
+
+      const isExplainResponse = (v) => {
+        if (!v || typeof v !== 'object') return false;
+        if (v.ok !== true) return false;
+        return (
+          typeof v.summary === 'string' &&
+          typeof v.what === 'string' &&
+          typeof v.when === 'string' &&
+          typeof v.why === 'string' &&
+          Array.isArray(v.notes) &&
+          Array.isArray(v.alternatives) &&
+          Array.isArray(v.examples)
+        );
+      };
+
+      const addSection = (title, text) => {
+        const section = document.createElement('div');
+        section.className = 'explainSection';
+
+        const t = document.createElement('div');
+        t.className = 'explainSectionTitle';
+        t.textContent = title;
+
+        const p = document.createElement('div');
+        p.className = 'explainText';
+        p.textContent = String(text || '').trim();
+
+        section.append(t, p);
+        return section;
+      };
+
+      const addListSection = (title, items) => {
+        const section = document.createElement('div');
+        section.className = 'explainSection';
+
+        const t = document.createElement('div');
+        t.className = 'explainSectionTitle';
+        t.textContent = title;
+
+        const ul = document.createElement('ul');
+        ul.className = 'explainList';
+        for (const raw of items || []) {
+          const s = String(raw || '').trim();
+          if (!s) continue;
+          const li = document.createElement('li');
+          li.textContent = s;
+          ul.appendChild(li);
+        }
+
+        section.append(t, ul);
+        return section;
+      };
+
+      const addExamplesSection = (title, examples) => {
+        const section = document.createElement('div');
+        section.className = 'explainSection';
+
+        const t = document.createElement('div');
+        t.className = 'explainSectionTitle';
+        t.textContent = title;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'explainExamples';
+
+        for (const ex of examples || []) {
+          const src = String(ex?.source || '').trim();
+          const meaning = String(ex?.meaning || '').trim();
+          if (!src || !meaning) continue;
+
+          const card = document.createElement('div');
+          card.className = 'explainExample';
+
+          const s = document.createElement('div');
+          s.className = 'explainExampleSource';
+          s.textContent = src;
+
+          const m = document.createElement('div');
+          m.className = 'explainExampleMeaning';
+          m.textContent = meaning;
+
+          card.append(s, m);
+          wrap.appendChild(card);
+        }
+
+        section.append(t, wrap);
+        return section;
+      };
+
+      const renderExplain = (v) => {
+        const header = document.createElement('div');
+        header.className = 'explainHeader';
+        header.textContent = 'Explanation';
+
+        explainOutput.appendChild(header);
+        explainOutput.appendChild(addSection('Summary', v.summary));
+        explainOutput.appendChild(addSection('What', v.what));
+        explainOutput.appendChild(addSection('When', v.when));
+        explainOutput.appendChild(addSection('Why', v.why));
+
+        if (Array.isArray(v.notes) && v.notes.some((x) => String(x || '').trim())) {
+          explainOutput.appendChild(addListSection('Notes', v.notes));
+        }
+        if (Array.isArray(v.alternatives) && v.alternatives.some((x) => String(x || '').trim())) {
+          explainOutput.appendChild(addListSection('Alternatives', v.alternatives));
+        }
+        if (Array.isArray(v.examples) && v.examples.some((x) => String(x?.source || '').trim())) {
+          explainOutput.appendChild(addExamplesSection('Examples', v.examples));
+        }
+      };
+
+      const setOutput = (v) => {
+        clearOutput();
+        if (v == null) return;
+
+        if (typeof v === 'string') {
+          setRawOutput(v);
+          return;
+        }
+
+        if (isExplainResponse(v)) {
+          renderExplain(v);
+          return;
+        }
+
+        try {
+          setRawOutput(JSON.stringify(v, null, 2));
+        } catch {
+          setRawOutput(String(v));
+        }
+      };
+
+      const callExplain = async () => {
+        const text = String(explainTextInput.value || '').trim();
+        const context = String(explainContextInput?.value || '').trim();
+        const sourceLang = String(explainSourceLangInput?.value || '').trim();
+        const explainIn = String(explainInInput?.value || '').trim() || 'en';
+
+        if (!text) {
+          setStatus('Type something first.');
+          setOutput(null);
+          return;
+        }
+
+        explainBtn.disabled = true;
+        setStatus('Loading…');
+        setOutput(null);
+
+        const url = C.DEFAULTS.explainProxyUrl;
+        const r = await fetch(url, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            text,
+            context: context || null,
+            sourceLang: sourceLang || null,
+            explainIn,
+          }),
+        });
+
+        const d = await (async () => {
+          try {
+            return await r.json();
+          } catch {
+            return null;
+          }
+        })();
+
+        if (!r.ok) {
+          const statusText = r.status ? `HTTP ${r.status}` : 'HTTP error';
+          const msg = typeof d?.error === 'string' && d.error.trim() ? d.error.trim() : statusText;
+          throw new Error(msg);
+        }
+
+        setStatus('Done.');
+        setOutput(d ?? (await r.text()));
+      };
+
+      explainBtn.addEventListener('click', () => {
+        callExplain()
+          .catch((e) => {
+            setStatus(e?.message ? String(e.message) : 'Request failed');
+          })
+          .finally(() => {
+            explainBtn.disabled = false;
+          });
+      });
+
+      explainTextInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) explainBtn.click();
       });
     }
   }

@@ -16,6 +16,7 @@ builder.Services.AddSingleton<IGeminiClient, GeminiClient>();
 builder.Services.AddSingleton<ITtsService, TtsService>();
 builder.Services.AddSingleton<ITranslateService, MyMemoryTranslateService>();
 builder.Services.AddSingleton<IVerbFormsService, GeminiVerbFormsService>();
+builder.Services.AddSingleton<IExplainService, GeminiExplainService>();
 
 builder.Services.AddCors(options =>
 {

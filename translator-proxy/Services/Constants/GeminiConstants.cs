@@ -3,6 +3,8 @@ namespace translator_proxy.Services;
 internal static class GeminiConstants
 {
     public const int MaxTextLength = 120;
+    public const int MaxExplainTextLength = 500;
+    public const int MaxExplainContextLength = 2000;
 
     public const string GeminiConfigSection = "Gemini";
 
@@ -13,6 +15,8 @@ internal static class GeminiConstants
 
     public const string GeminiVerbFormsSystemInstructionConfigPath = "Gemini:VerbForms:SystemInstruction";
     public const string GeminiVerbFormsPromptTemplateConfigPath = "Gemini:VerbForms:PromptTemplate";
+    public const string GeminiExplainSystemInstructionConfigPath = "Gemini:Explain:SystemInstruction";
+    public const string GeminiExplainPromptTemplateConfigPath = "Gemini:Explain:PromptTemplate";
 
     // Legacy (top-level) keys, kept for backward compatibility with existing env vars.
     public const string LegacyGeminiApiKeyConfigKey = "GEMINI_API_KEY";
@@ -28,6 +32,7 @@ internal static class GeminiConstants
 
     public const string ErrMissingText = "Missing text";
     public const string ErrTextTooLongFormat = "Text too long (max {0} chars)";
+    public const string ErrContextTooLongFormat = "Context too long (max {0} chars)";
     public const string ErrMissingApiKey = "Server is missing Gemini API key";
 
     public const string ErrGeminiEmptyResponse = "Gemini returned empty response";
