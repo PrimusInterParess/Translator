@@ -5,11 +5,14 @@ Chrome/Edge translation helper extension (**`translator-ui/`**) with an optional
 ## What’s inside
 
 - **`translator-ui/`**: MV3 browser extension (UI + content script + background service worker)
-  - Translates via **MyMemory** (`https://api.mymemory.translated.net/`)
+  - Translates via **local proxy** → MyMemory (`https://api.mymemory.translated.net/`)
   - Pronunciation via:
     - **Browser/OS voice** (`chrome.tts`), or
     - **Local proxy** (recommended) → Google Cloud Text-to-Speech
-- **`translator-proxy/`**: ASP.NET (net8.0) minimal API that exposes `POST /tts` on `http://127.0.0.1:8788`
+- **`translator-proxy/`**: ASP.NET (net8.0) minimal API that exposes:
+  - `POST /translate/mymemory`
+  - `POST /tts`
+  on `http://127.0.0.1:8788`
 - **`translator-ui/server/`**: optional Node/Express proxy (same idea as the .NET proxy)
 
 For extension-only details (features, structure, debugging), also see `translator-ui/README.md`.
@@ -26,14 +29,14 @@ flowchart LR
   end
 
   MyMemory["MyMemory Translate API (api.mymemory.translated.net)"]
-  Proxy["Local TTS proxy (translator-proxy @ 127.0.0.1:8788)"]
+  Proxy["Local proxy (translator-proxy @ 127.0.0.1:8788)"]
   Google["Google Cloud Text-to-Speech API (texttospeech.googleapis.com)"]
 
   UI --> BG
   CS --> BG
-  BG --> MyMemory
-  BG --> TTS
   BG --> Proxy
+  BG --> TTS
+  Proxy --> MyMemory
   Proxy --> Google
 ```
 

@@ -8,7 +8,6 @@
     "tts"
   ],
   "host_permissions": [
-    "https://api.mymemory.translated.net/*",
     "http://localhost/*",
     "http://127.0.0.1/*"
   ],

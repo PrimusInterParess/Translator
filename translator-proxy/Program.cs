@@ -11,6 +11,7 @@ if (builder.Environment.IsDevelopment())
 
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<ITtsService, TtsService>();
+builder.Services.AddSingleton<ITranslateService, MyMemoryTranslateService>();
 
 builder.Services.AddCors(options =>
 {

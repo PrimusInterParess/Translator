@@ -1,6 +1,6 @@
 # OversætMig (Chrome/Edge extension)
 
-Small translation helper that translates selected text using the **MyMemory** API.
+Small translation helper that translates selected text via a **local proxy** (which calls the MyMemory API).
 
 ## Features
 
@@ -46,7 +46,7 @@ Small translation helper that translates selected text using the **MyMemory** AP
 ## Limits / notes
 
 - Max text length is **500 characters** (longer selections are ignored / rejected).
-- Network calls go only to `https://api.mymemory.translated.net/`.
+- Network calls go only to your local proxy (default: `http://127.0.0.1:8788`), which then calls MyMemory.
 - MyMemory does not auto-detect language; `auto` in the UI means **the extension guesses** a source language.
 
 ## Development
@@ -84,7 +84,7 @@ npm test
 - `storage`: saves settings + translations state
 - `contextMenus`: adds the “Translate selection” menu item
 - `tts`: plays pronunciation using the browser/OS text-to-speech engine
-- Host permission: `https://api.mymemory.translated.net/*`
+- Host permission: `http://127.0.0.1/*` / `http://localhost/*`
 
 ## Project structure (high level)
 
@@ -99,6 +99,7 @@ npm test
 ### Main folders
 
 - `background/*`: background handlers, result window helper, MyMemory client
+- `background/*`: background handlers, result window helper, proxy translation client
 - `content/*`: on-page popup implementation
 - `core/*`: translation + TTS services used by background handlers
 - `shared/*`: shared helpers (OM namespace, storage/settings, runtime messaging, lang guessing, text sanitizing, UI helpers)
