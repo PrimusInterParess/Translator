@@ -160,8 +160,7 @@ public sealed class GeminiVerbFormsService : IVerbFormsService
                     ["pastParticiple"] = new JsonObject { ["type"] = "STRING" },
                     ["imperative"] = new JsonObject { ["type"] = "STRING" }
                 },
-                ["required"] = new JsonArray { "infinitive", "present", "past", "pastParticiple", "imperative" },
-                ["additionalProperties"] = false
+                ["required"] = new JsonArray { "infinitive", "present", "past", "pastParticiple", "imperative" }
             }
         };
 
