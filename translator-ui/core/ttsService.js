@@ -11,13 +11,6 @@
 
   const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
 
-  const canUseGoogle = (settings) => {
-    if (settings?.ttsProvider !== 'google') return false;
-    if (!OM.googleTtsService?.synthesize) return false;
-    const key = typeof settings?.googleApiKey === 'string' ? settings.googleApiKey.trim() : '';
-    return !!key;
-  };
-
   const canUseProxy = (settings) => {
     if (settings?.ttsProvider !== 'proxy') return false;
     try {
@@ -77,21 +70,6 @@
         } catch (err) {
           // Proxy network error; fall back to OS/Chrome TTS below.
         }
-      }
-
-      if (canUseGoogle(settings)) {
-        const languageCode =
-          typeof settings.googleLanguageCode === 'string' && settings.googleLanguageCode.trim()
-            ? settings.googleLanguageCode.trim()
-            : normalizeGoogleLang(lang) || C?.DEFAULTS?.googleLanguageCode || 'en-US';
-        return await OM.googleTtsService.synthesize({
-          text: t,
-          apiKey: settings.googleApiKey,
-          languageCode,
-          voiceName: settings.googleVoiceName,
-          speakingRate: settings.ttsRate,
-          pitch: settings.googlePitch,
-        });
       }
 
       if (!globalThis.chrome?.tts?.speak) {
@@ -243,16 +221,6 @@
             available: !!urlOk,
             voiceCount: urlOk ? 1 : 0,
             provider: 'proxy',
-          };
-        }
-
-        if (settings.ttsProvider === 'google') {
-          const keyOk = typeof settings.googleApiKey === 'string' && settings.googleApiKey.trim();
-          return {
-            ok: true,
-            available: !!keyOk && !!OM.googleTtsService?.synthesize,
-            voiceCount: keyOk ? 1 : 0,
-            provider: 'google',
           };
         }
 

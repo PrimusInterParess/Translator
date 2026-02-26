@@ -274,7 +274,7 @@
           }
           if (!res?.ok) {
             const msg = typeof res?.error === 'string' && res.error ? res.error : 'TTS failed';
-            statusEl.textContent = ttsProvider === 'google' ? `Google TTS failed: ${msg}` : `TTS failed: ${msg}`;
+            statusEl.textContent = `TTS failed: ${msg}`;
             setTimeout(() => {
               if (statusEl.textContent.includes(msg)) statusEl.textContent = '';
             }, 5000);

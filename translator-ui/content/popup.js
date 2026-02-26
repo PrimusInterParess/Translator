@@ -218,7 +218,7 @@
         }
         if (!res?.ok) {
           const msg = typeof res?.error === 'string' && res.error ? res.error : 'TTS failed';
-          speakBtn.title = ttsProvider === 'google' ? `Google TTS failed: ${msg}` : `TTS failed: ${msg}`;
+          speakBtn.title = `TTS failed: ${msg}`;
           // Only fallback when chrome.tts is truly unavailable; otherwise avoid overlap/echo.
           const err = typeof res?.error === 'string' ? res.error.toLowerCase() : '';
           if (err.includes('chrome.tts not available')) {

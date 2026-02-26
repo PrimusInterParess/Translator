@@ -7,8 +7,6 @@
   const normalizeText = (v) => (typeof v === 'string' ? v.trim() : '');
   const normalizeTtsProvider = (v) => {
     const s = normalizeText(v).toLowerCase();
-    // "google" (direct-from-extension) is deprecated in UI; map to proxy.
-    if (s === 'google') return 'proxy';
     if (s === 'proxy') return 'proxy';
     return 'browser';
   };
@@ -48,7 +46,6 @@
         C.STORAGE_KEYS.ttsRate,
         C.STORAGE_KEYS.ttsVolume,
         C.STORAGE_KEYS.ttsProvider,
-        C.STORAGE_KEYS.googleApiKey,
         C.STORAGE_KEYS.googleVoiceName,
         C.STORAGE_KEYS.googleLanguageCode,
         C.STORAGE_KEYS.googlePitch,
@@ -65,7 +62,6 @@
         ttsRate: normalizeTtsRate(res[C.STORAGE_KEYS.ttsRate]),
         ttsVolume: normalizeTtsVolume(res[C.STORAGE_KEYS.ttsVolume]),
         ttsProvider: normalizeTtsProvider(res[C.STORAGE_KEYS.ttsProvider] ?? C.DEFAULTS.ttsProvider),
-        googleApiKey: normalizeText(res[C.STORAGE_KEYS.googleApiKey] ?? C.DEFAULTS.googleApiKey),
         googleVoiceName: normalizeText(res[C.STORAGE_KEYS.googleVoiceName] ?? C.DEFAULTS.googleVoiceName),
         googleLanguageCode: normalizeText(res[C.STORAGE_KEYS.googleLanguageCode] ?? C.DEFAULTS.googleLanguageCode),
         googlePitch: normalizeGooglePitch(res[C.STORAGE_KEYS.googlePitch]),
@@ -98,9 +94,6 @@
     },
     async setTtsProvider(ttsProvider) {
       await OM.storage.set({ [C.STORAGE_KEYS.ttsProvider]: normalizeTtsProvider(ttsProvider) });
-    },
-    async setGoogleApiKey(googleApiKey) {
-      await OM.storage.set({ [C.STORAGE_KEYS.googleApiKey]: normalizeText(googleApiKey) });
     },
     async setGoogleVoiceName(googleVoiceName) {
       await OM.storage.set({ [C.STORAGE_KEYS.googleVoiceName]: normalizeText(googleVoiceName) });

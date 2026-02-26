@@ -48,10 +48,8 @@
     const ttsVolumeInput = document.getElementById('ttsVolumeInput');
     const ttsVolumeValue = document.getElementById('ttsVolumeValue');
     const ttsProviderSelect = document.getElementById('ttsProviderSelect');
-    const googleSection = document.getElementById('googleTtsSection');
     const proxySection = document.getElementById('proxyTtsSection');
     const ttsProxyUrlInput = document.getElementById('ttsProxyUrlInput');
-    const googleApiKeyInput = document.getElementById('googleApiKeyInput');
     const googleLanguageCodeInput = document.getElementById('googleLanguageCodeInput');
     const googleVoiceNameInput = document.getElementById('googleVoiceNameInput');
     const googlePitchInput = document.getElementById('googlePitchInput');
@@ -86,7 +84,6 @@
       if (ttsVolumeValue) ttsVolumeValue.textContent = formatVolume(ttsVolumeInput.value);
     }
 
-    if (googleApiKeyInput) googleApiKeyInput.value = settings.googleApiKey || '';
     if (googleLanguageCodeInput) googleLanguageCodeInput.value = settings.googleLanguageCode || C.DEFAULTS.googleLanguageCode;
     if (googleVoiceNameInput) googleVoiceNameInput.value = settings.googleVoiceName || '';
     if (ttsProxyUrlInput) ttsProxyUrlInput.value = settings.ttsProxyUrl || C.DEFAULTS.ttsProxyUrl;
@@ -97,7 +94,6 @@
 
     const syncProviderVisibility = () => {
       const provider = ttsProviderSelect ? String(ttsProviderSelect.value || '').toLowerCase() : 'browser';
-      if (googleSection) googleSection.style.display = provider === 'google' ? '' : 'none';
       if (proxySection) proxySection.style.display = provider === 'proxy' ? '' : 'none';
     };
     syncProviderVisibility();
@@ -187,25 +183,6 @@
       });
       ttsVolumeInput.addEventListener('change', () => {
         persistVolume().catch(() => {});
-      });
-    }
-
-    if (googleApiKeyInput) {
-      const persistKey = async () => {
-        await OM.settings.setGoogleApiKey(googleApiKeyInput.value);
-      };
-      let keyDebounceId;
-      googleApiKeyInput.addEventListener('input', () => {
-        clearTimeout(keyDebounceId);
-        keyDebounceId = setTimeout(() => {
-          persistKey().catch(() => {});
-        }, 350);
-      });
-      googleApiKeyInput.addEventListener('change', () => {
-        persistKey().catch(() => {});
-      });
-      googleApiKeyInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') persistKey().catch(() => {});
       });
     }
 

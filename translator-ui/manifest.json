@@ -9,7 +9,6 @@
   ],
   "host_permissions": [
     "https://api.mymemory.translated.net/*",
-    "https://texttospeech.googleapis.com/*",
     "http://localhost/*",
     "http://127.0.0.1/*"
   ],

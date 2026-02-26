@@ -12,7 +12,6 @@ importScripts(
   'background/mymemory.js',
   'background/resultWindow.js',
   'core/translatorService.js',
-  'core/googleTtsService.js',
   'core/ttsService.js',
   'background/handlers.js',
   'background/main.js'
