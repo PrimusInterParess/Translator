@@ -54,7 +54,7 @@ public sealed class GeminiVerbFormsService : IVerbFormsService
         }
 
         var model = (_geminiOptions.Value.Model ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(model)) model = "gemini-1.5-flash";
+        if (string.IsNullOrWhiteSpace(model)) model = "gemini-2.0-flash";
 
         var systemInstruction = (_geminiOptions.Value.VerbForms.SystemInstruction ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(systemInstruction))

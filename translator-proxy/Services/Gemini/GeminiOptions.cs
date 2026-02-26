@@ -3,8 +3,20 @@ namespace translator_proxy.Services.Gemini;
 public sealed class GeminiOptions
 {
     public string? ApiKey { get; set; }
-    public string Model { get; set; } = "gemini-1.5-flash";
-    public string GenerateContentBaseUrl { get; set; } = "https://generativelanguage.googleapis.com/v1beta/models";
+    public string Model { get; set; } = "gemini-2.0-flash";
+
+    /// <summary>
+    /// Base URL that should point to ".../{apiVersion}/models".
+    /// Examples:
+    /// - https://generativelanguage.googleapis.com/v1/models
+    /// - https://generativelanguage.googleapis.com/v1beta/models
+    /// </summary>
+    public string GenerateContentBaseUrl { get; set; } = "https://generativelanguage.googleapis.com/v1/models";
+
+    /// <summary>
+    /// If upstream returns 404, try the other API version (v1 &lt;-&gt; v1beta) once.
+    /// </summary>
+    public bool EnableApiVersionFallback { get; set; } = true;
 
     /// <summary>
     /// Preferred auth method for the Gemini REST API.
