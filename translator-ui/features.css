@@ -4,18 +4,55 @@
 
 html,
 body {
-  width: 100%;
+  /* Override popup-sized defaults from controls.css */
+  width: 760px;
+  max-width: 100%;
+  min-height: 860px;
+  height: auto;
   max-height: none;
 }
 
 body {
-  padding: 12px;
+  padding: 22px;
+  font-size: 16px;
 }
 
 .card {
-  padding: 12px;
+  padding: 22px;
+}
+
+.appTitle {
+  font-size: 24px;
+  margin: 0 0 16px;
+}
+
+label {
+  font-size: 14px;
+  margin-top: 12px;
+  margin-bottom: 6px;
+}
+
+textarea,
+input {
+  padding: 12px 14px;
+  border-radius: 16px;
+}
+
+.primaryBtn {
+  padding: 13px 16px;
 }
 
 .outputBox {
-  max-height: 340px;
+  max-height: 420px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+@media (max-width: 820px) {
+
+  html,
+  body {
+    width: 100%;
+    min-height: 0;
+  }
 }

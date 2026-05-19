@@ -1,5 +1,10 @@
 :root {
   color-scheme: light;
+  /* Gentler, non-sky-blue accent palette */
+  --accent-rgb: 70, 118, 104; /* soft sage */
+  /* Softer neutrals (reduce bright whites) */
+  --app-bg: #e9ece7;
+  --surface-rgb: 246, 247, 244;
 }
 
 *,
@@ -30,12 +35,12 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: #f5f5f7;
+  background: var(--app-bg);
   z-index: -1;
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.86);
+  background: rgba(var(--surface-rgb), 0.92);
   border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 16px;
   padding: 12px 12px 14px;
@@ -77,8 +82,8 @@ textarea {
 
 .trans-input:focus,
 textarea:focus {
-  border-color: rgba(10, 132, 255, 0.65);
-  box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.16);
+  border-color: rgba(var(--accent-rgb), 0.55);
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.14);
 }
 
 .trans-actions {
@@ -142,8 +147,8 @@ textarea:focus {
 
 .trans-speak:focus {
   outline: none;
-  box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.16);
-  border-color: rgba(10, 132, 255, 0.50);
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.14);
+  border-color: rgba(var(--accent-rgb), 0.42);
 }
 
 .trans-speak:disabled {

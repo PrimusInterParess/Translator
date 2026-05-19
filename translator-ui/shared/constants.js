@@ -36,8 +36,8 @@
       googlePitch: 0,
       // Use 127.0.0.1 (IPv4) to avoid localhost/IPv6 ambiguity on Windows.
       ttsProxyUrl: 'http://127.0.0.1:8788/tts',
-      verbFormsProxyUrl: 'http://127.0.0.1:8788/verbforms/gemini',
-      explainProxyUrl: 'http://127.0.0.1:8788/explain/gemini',
+      verbFormsProxyUrl: 'http://127.0.0.1:8788/verbforms',
+      explainProxyUrl: 'http://127.0.0.1:8788/explain',
     }),
     CONTEXT_MENU_ID: 'qt-translate-selection',
   });

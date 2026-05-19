@@ -1,6 +1,7 @@
 using System.Text.Json;
 using translator_proxy.Services;
 using translator_proxy.Services.Gemini;
+using translator_proxy.Services.Ollama;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,12 +12,30 @@ if (builder.Environment.IsDevelopment())
 }
 
 builder.Services.AddHttpClient();
-builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection("Gemini"));
-builder.Services.AddSingleton<IGeminiClient, GeminiClient>();
 builder.Services.AddSingleton<ITtsService, TtsService>();
 builder.Services.AddSingleton<ITranslateService, MyMemoryTranslateService>();
-builder.Services.AddSingleton<IVerbFormsService, GeminiVerbFormsService>();
-builder.Services.AddSingleton<IExplainService, GeminiExplainService>();
+
+var llmProvider = builder.Configuration["Llm:Provider"] ?? "Gemini";
+if (llmProvider.Equals("Ollama", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.Configure<OllamaOptions>(builder.Configuration.GetSection("Ollama"));
+    builder.Services.AddHttpClient(OllamaClient.HttpClientName, (sp, client) =>
+    {
+        var seconds = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<OllamaOptions>>().Value
+            .RequestTimeoutSeconds ?? 300;
+        client.Timeout = TimeSpan.FromSeconds(Math.Clamp(seconds, 30, 600));
+    });
+    builder.Services.AddSingleton<IOllamaClient, OllamaClient>();
+    builder.Services.AddSingleton<IVerbFormsService, OllamaVerbFormsService>();
+    builder.Services.AddSingleton<IExplainService, OllamaExplainService>();
+}
+else
+{
+    builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection("Gemini"));
+    builder.Services.AddSingleton<IGeminiClient, GeminiClient>();
+    builder.Services.AddSingleton<IVerbFormsService, GeminiVerbFormsService>();
+    builder.Services.AddSingleton<IExplainService, GeminiExplainService>();
+}
 
 builder.Services.AddCors(options =>
 {

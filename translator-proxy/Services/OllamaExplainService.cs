@@ -1,22 +1,20 @@
-using System.Text.Json;
-using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using translator_proxy.Models;
-using translator_proxy.Services.Gemini;
 using translator_proxy.Services.Llm;
+using translator_proxy.Services.Ollama;
 
 namespace translator_proxy.Services;
 
-public sealed class GeminiExplainService : IExplainService
+public sealed class OllamaExplainService : IExplainService
 {
-    private readonly IGeminiClient _gemini;
-    private readonly IOptions<GeminiOptions> _geminiOptions;
+    private readonly IOllamaClient _ollama;
+    private readonly IOptions<OllamaOptions> _options;
 
-    public GeminiExplainService(IGeminiClient gemini, IOptions<GeminiOptions> geminiOptions)
+    public OllamaExplainService(IOllamaClient ollama, IOptions<OllamaOptions> options)
     {
-        _gemini = gemini;
-        _geminiOptions = geminiOptions;
+        _ollama = ollama;
+        _options = options;
     }
 
     public async Task<ExplainServiceResult> ExplainAsync(ExplainRequest? req, CancellationToken cancellationToken)
@@ -55,36 +53,36 @@ public sealed class GeminiExplainService : IExplainService
             );
         }
 
-        var apiKey = (_geminiOptions.Value.ApiKey ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(apiKey))
-        {
-            return new ExplainServiceResult(
-                StatusCode: StatusCodes.Status500InternalServerError,
-                Body: new { ok = false, error = GeminiConstants.ErrMissingApiKey }
-            );
-        }
-
-        var model = (_geminiOptions.Value.Model ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(model)) model = "gemini-2.5-flash-lite";
-
         var explainIn = (req?.ExplainIn ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(explainIn)) explainIn = "en";
 
         var sourceLang = (req?.SourceLang ?? string.Empty).Trim();
 
-        var systemInstruction = (_geminiOptions.Value.Explain.SystemInstruction ?? string.Empty).Trim();
+        if (!TryBuildSystemInstruction(_options.Value.Explain.SystemInstruction, out var systemInstruction, out var systemError))
+        {
+            return new ExplainServiceResult(
+                StatusCode: StatusCodes.Status500InternalServerError,
+                Body: new { ok = false, error = systemError }
+            );
+        }
 
-        var promptTemplate = _geminiOptions.Value.Explain.PromptTemplate ?? string.Empty;
-        var prompt = BuildPrompt(promptTemplate, text, context, sourceLang, explainIn);
+        if (!TryBuildPrompt(_options.Value.Explain.PromptTemplate, text, context, sourceLang, explainIn, out var prompt, out var promptError))
+        {
+            return new ExplainServiceResult(
+                StatusCode: StatusCodes.Status500InternalServerError,
+                Body: new { ok = false, error = promptError }
+            );
+        }
 
-        var body = BuildGenerateContentRequest(systemInstruction, prompt);
-        var result = await _gemini.GenerateContentAsync(model, body, cancellationToken);
+        var result = await _ollama.ChatAsync(systemInstruction, prompt, jsonMode: true, cancellationToken);
 
         if (!result.Ok)
         {
             var msg = !string.IsNullOrWhiteSpace(result.Error)
                 ? result.Error!
-                : (result.UpstreamStatusCode is { } s ? $"{GeminiConstants.HttpStatusFallbackPrefix}{s}" : GeminiConstants.ErrUnexpectedApiResponse);
+                : (result.UpstreamStatusCode is { } s
+                    ? $"{LlmConstants.HttpStatusFallbackPrefix}{s}"
+                    : LlmConstants.ErrUnexpectedApiResponse);
 
             return new ExplainServiceResult(
                 StatusCode: StatusCodes.Status502BadGateway,
@@ -92,12 +90,12 @@ public sealed class GeminiExplainService : IExplainService
             );
         }
 
-        var raw = LlmJsonHelper.NormalizeJsonText(result.CandidateText);
+        var raw = LlmJsonHelper.NormalizeJsonText(result.Content);
         if (string.IsNullOrWhiteSpace(raw))
         {
             return new ExplainServiceResult(
                 StatusCode: StatusCodes.Status502BadGateway,
-                Body: new { ok = false, error = GeminiConstants.ErrGeminiEmptyResponse }
+                Body: new { ok = false, error = LlmConstants.ErrLlmEmptyResponse }
             );
         }
 
@@ -115,61 +113,48 @@ public sealed class GeminiExplainService : IExplainService
         );
     }
 
-    private static JsonObject BuildGenerateContentRequest(string systemInstruction, string prompt)
+    private static bool TryBuildSystemInstruction(string? baseInstruction, out string systemInstruction, out string error)
     {
-        var req = new JsonObject
+        var instruction = (baseInstruction ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(instruction))
         {
-            ["contents"] = new JsonArray
-            {
-                new JsonObject
-                {
-                    ["role"] = "user",
-                    ["parts"] = new JsonArray
-                    {
-                        new JsonObject { ["text"] = prompt }
-                    }
-                }
-            }
-        };
-
-        if (!string.IsNullOrWhiteSpace(systemInstruction))
-        {
-            req["systemInstruction"] = new JsonObject
-            {
-                ["role"] = "system",
-                ["parts"] = new JsonArray
-                {
-                    new JsonObject { ["text"] = systemInstruction }
-                }
-            };
+            systemInstruction = string.Empty;
+            error = LlmConstants.ErrMissingOllamaExplainSystemInstruction;
+            return false;
         }
 
-        req["generationConfig"] = new JsonObject
-        {
-            ["responseMimeType"] = "application/json",
-            ["responseSchema"] = ExplainGeminiSchema.BuildResponseSchema()
-        };
-
-        return req;
+        systemInstruction = $"{instruction}\n\n{LlmConstants.ExplainJsonSchema}";
+        error = string.Empty;
+        return true;
     }
 
-    private static string BuildPrompt(string template, string text, string context, string sourceLang, string explainIn)
+    private static bool TryBuildPrompt(
+        string? template,
+        string text,
+        string context,
+        string sourceLang,
+        string explainIn,
+        out string prompt,
+        out string error)
     {
         var t = (template ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(t))
         {
-            t = new GeminiOptions.ExplainOptions().PromptTemplate;
+            prompt = string.Empty;
+            error = LlmConstants.ErrMissingOllamaExplainPromptTemplate;
+            return false;
         }
 
         var fragment = string.IsNullOrWhiteSpace(context) ? "(none)" : context;
-        return t
+        prompt = t
             .Replace("{sentence}", text)
             .Replace("{fragment}", fragment)
             .Replace("{text}", text)
             .Replace("{context}", fragment)
             .Replace("{sourceLang}", string.IsNullOrWhiteSpace(sourceLang) ? "(infer)" : sourceLang)
             .Replace("{explainIn}", string.IsNullOrWhiteSpace(explainIn) ? "en" : explainIn);
+        error = string.Empty;
+        return true;
     }
 
 }
-

@@ -14,8 +14,8 @@ public class ExplainController : ControllerBase
         _explain = explain;
     }
 
-    [HttpPost("~/explain/gemini")]
-    public async Task<IActionResult> GeminiExplain([FromBody] ExplainRequest? req, CancellationToken cancellationToken)
+    [HttpPost("~/explain")]
+    public async Task<IActionResult> Explain([FromBody] ExplainRequest? req, CancellationToken cancellationToken)
     {
         var result = await _explain.ExplainAsync(req, cancellationToken);
         return StatusCode(result.StatusCode, result.Body);

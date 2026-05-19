@@ -328,6 +328,7 @@
         if (v.ok !== true) return false;
         return (
           typeof v.infinitive === 'string' &&
+          typeof v.meaning === 'string' &&
           typeof v.present === 'string' &&
           typeof v.past === 'string' &&
           typeof v.pastParticiple === 'string' &&
@@ -336,9 +337,15 @@
       };
 
       const renderVerbForms = (v) => {
+        const infinitive = String(v.infinitive || '').trim();
+
         const header = document.createElement('div');
         header.className = 'verbFormsHeader';
-        header.textContent = 'Verb forms';
+        header.textContent = infinitive ? `at ${infinitive}` : 'Verb forms';
+
+        const meaning = document.createElement('div');
+        meaning.className = 'verbFormsMeaning';
+        meaning.textContent = String(v.meaning || '').trim();
 
         const grid = document.createElement('div');
         grid.className = 'verbFormsGrid';
@@ -353,14 +360,12 @@
           grid.append(l, val);
         };
 
-        const infinitive = String(v.infinitive || '').trim();
-        addRow('Infinitive', infinitive ? `at ${infinitive}` : '');
         addRow('Present', String(v.present || '').trim());
         addRow('Past', String(v.past || '').trim());
         addRow('Past participle', String(v.pastParticiple || '').trim());
         addRow('Imperative', String(v.imperative || '').trim());
 
-        verbFormsOutput.append(header, grid);
+        verbFormsOutput.append(header, meaning, grid);
       };
 
       const setOutput = (v) => {
@@ -400,7 +405,7 @@
         const r = await fetch(url, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text, meaningIn: 'en' }),
         });
 
         const d = await (async () => {
@@ -456,113 +461,24 @@
         explainOutput.appendChild(pre);
       };
 
+      const explainRender = OM.explainRender;
       const isExplainResponse = (v) => {
-        if (!v || typeof v !== 'object') return false;
-        if (v.ok !== true) return false;
+        if (explainRender?.isExplainResponse?.(v)) return true;
+        if (!v || typeof v !== 'object' || v.ok !== true) return false;
         return (
-          typeof v.summary === 'string' &&
-          typeof v.what === 'string' &&
-          typeof v.when === 'string' &&
-          typeof v.why === 'string' &&
-          Array.isArray(v.notes) &&
-          Array.isArray(v.alternatives) &&
-          Array.isArray(v.examples)
+          typeof v.translation === 'string' &&
+          typeof v.inYourSentence === 'string' &&
+          typeof v.whenUsed === 'string' &&
+          typeof v.whyDifferent === 'string' &&
+          (typeof v.sentenceTranslation === 'string' || typeof v.translation === 'string')
         );
       };
-
-      const addSection = (title, text) => {
-        const section = document.createElement('div');
-        section.className = 'explainSection';
-
-        const t = document.createElement('div');
-        t.className = 'explainSectionTitle';
-        t.textContent = title;
-
-        const p = document.createElement('div');
-        p.className = 'explainText';
-        p.textContent = String(text || '').trim();
-
-        section.append(t, p);
-        return section;
-      };
-
-      const addListSection = (title, items) => {
-        const section = document.createElement('div');
-        section.className = 'explainSection';
-
-        const t = document.createElement('div');
-        t.className = 'explainSectionTitle';
-        t.textContent = title;
-
-        const ul = document.createElement('ul');
-        ul.className = 'explainList';
-        for (const raw of items || []) {
-          const s = String(raw || '').trim();
-          if (!s) continue;
-          const li = document.createElement('li');
-          li.textContent = s;
-          ul.appendChild(li);
-        }
-
-        section.append(t, ul);
-        return section;
-      };
-
-      const addExamplesSection = (title, examples) => {
-        const section = document.createElement('div');
-        section.className = 'explainSection';
-
-        const t = document.createElement('div');
-        t.className = 'explainSectionTitle';
-        t.textContent = title;
-
-        const wrap = document.createElement('div');
-        wrap.className = 'explainExamples';
-
-        for (const ex of examples || []) {
-          const src = String(ex?.source || '').trim();
-          const meaning = String(ex?.meaning || '').trim();
-          if (!src || !meaning) continue;
-
-          const card = document.createElement('div');
-          card.className = 'explainExample';
-
-          const s = document.createElement('div');
-          s.className = 'explainExampleSource';
-          s.textContent = src;
-
-          const m = document.createElement('div');
-          m.className = 'explainExampleMeaning';
-          m.textContent = meaning;
-
-          card.append(s, m);
-          wrap.appendChild(card);
-        }
-
-        section.append(t, wrap);
-        return section;
-      };
-
       const renderExplain = (v) => {
-        const header = document.createElement('div');
-        header.className = 'explainHeader';
-        header.textContent = 'Explanation';
-
-        explainOutput.appendChild(header);
-        explainOutput.appendChild(addSection('Summary', v.summary));
-        explainOutput.appendChild(addSection('What', v.what));
-        explainOutput.appendChild(addSection('When', v.when));
-        explainOutput.appendChild(addSection('Why', v.why));
-
-        if (Array.isArray(v.notes) && v.notes.some((x) => String(x || '').trim())) {
-          explainOutput.appendChild(addListSection('Notes', v.notes));
+        if (explainRender?.renderExplain) {
+          explainRender.renderExplain(explainOutput, v);
+          return;
         }
-        if (Array.isArray(v.alternatives) && v.alternatives.some((x) => String(x || '').trim())) {
-          explainOutput.appendChild(addListSection('Alternatives', v.alternatives));
-        }
-        if (Array.isArray(v.examples) && v.examples.some((x) => String(x?.source || '').trim())) {
-          explainOutput.appendChild(addExamplesSection('Examples', v.examples));
-        }
+        setRawOutput(JSON.stringify(v, null, 2));
       };
 
       const setOutput = (v) => {

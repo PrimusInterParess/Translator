@@ -11,7 +11,7 @@
   <div class="card">
     <h1 class="appTitle">OversætMig — Features</h1>
 
-    <label>Verb forms (Gemini)</label>
+    <label>Verb forms</label>
     <textarea id="verbFormsTextInput" rows="3" placeholder="Type a verb or phrase…"></textarea>
     <button id="verbFormsBtn" type="button" class="primaryBtn">Get verb forms</button>
     <div id="verbFormsStatus" class="hint" aria-live="polite"></div>
@@ -19,9 +19,11 @@
 
     <div class="divider"></div>
 
-    <label>Explain phrase (Gemini)</label>
-    <textarea id="explainTextInput" rows="3" placeholder="Type a phrase or fragment…"></textarea>
-    <textarea id="explainContextInput" rows="3" placeholder="Optional context (sentence/paragraph)…"></textarea>
+    <label>Explain</label>
+    <label class="inlineLabel">Sentence (full or partial)</label>
+    <textarea id="explainTextInput" rows="2" placeholder="Paste the sentence…"></textarea>
+    <label class="inlineLabel">Part to explain</label>
+    <textarea id="explainContextInput" rows="2" placeholder="Words or phrase from the sentence (optional)…"></textarea>
 
     <div class="inlineRow">
       <div class="inlineCol">
@@ -43,6 +45,7 @@
   <script src="shared/constants.js"></script>
   <script src="shared/storage.js"></script>
   <script src="shared/settings.js"></script>
+  <script src="popup/explain-render.js"></script>
   <script src="popup/controller.js"></script>
   <script src="features.js"></script>
 </body>

@@ -10,7 +10,10 @@ services:
       # put this in a local .env file (same folder as this compose file)
       # Tts__Google__ApiKey=...
       Tts__Google__ApiKey: ${Tts__Google__ApiKey}
-      # Gemini__ApiKey=...
-      Gemini__ApiKey: ${Gemini__ApiKey}
+      Llm__Provider: ${Llm__Provider:-Gemini}
+      Ollama__BaseUrl: ${Ollama__BaseUrl}
+      Ollama__Model: ${Ollama__Model}
+      # Gemini__ApiKey=... (when Llm__Provider=Gemini)
+      Gemini__ApiKey: ${Gemini__ApiKey:-}
       Gemini__Model: ${Gemini__Model:-gemini-2.5-flash-lite}
       PORT: ${PORT:-8788}

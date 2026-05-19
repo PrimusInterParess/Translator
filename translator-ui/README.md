@@ -14,13 +14,12 @@ The proxy expected by the extension lives in **`translator-proxy/`** and listens
 - Pronunciation (text-to-speech):
   - On-page popup has a **speaker icon** button to listen
   - Result window has the same **speaker icon** button to listen
-- Popup settings:
-  - **Email** (optional) to increase MyMemory quota
-  - **Translate from** (including `auto` guess; MyMemory itself does not auto-detect)
-  - **Translate to**
-- Pronunciation settings:
-  - **Pronunciation speed**
-  - **Pronunciation volume**
+  - **High quality voice** uses the local proxy (`POST /tts`); **Browser / OS voice** uses `chrome.tts`
+- Popup **Options**: languages, hold delay, auto-close, email, TTS speed/volume/voice
+- Popup **Features** (requires local proxy with LLM configured — see repo root `README.md`):
+  - **Verb forms**: Danish conjugation table + gloss (`POST /verbforms`)
+  - **Explain**: sentence + optional fragment tutor card (`POST /explain`)
+  - **Open Features in a window** for a larger layout (`features.html`)
 - Result window with **Translate** button and **Ctrl+Enter** shortcut
 
 ## Install (unpacked)
@@ -39,8 +38,8 @@ The proxy expected by the extension lives in **`translator-proxy/`** and listens
 - **From any page (on-page popup)**: select text and keep the same selection for ~2 seconds
   - A small popup appears near the cursor.
 - **From the extension popup** (toolbar icon):
-  - Set **Email**, **Translate from**, **Translate to**
-  - Adjust **Pronunciation speed** and **Pronunciation volume** if needed
+  - **Options**: email, languages, hold delay, TTS settings
+  - **Features**: verb forms and explain (Ctrl+Enter in a text field runs the action)
 - **In the result window**:
   - Edit the text if needed and click **Translate** (or press **Ctrl+Enter**)
   - Click the **speaker icon** button to listen to pronunciation
@@ -48,7 +47,7 @@ The proxy expected by the extension lives in **`translator-proxy/`** and listens
 ## Limits / notes
 
 - Max text length is **500 characters** (longer selections are ignored / rejected).
-- Network calls go only to your local proxy (default: `http://127.0.0.1:8788`), which then calls MyMemory.
+- Network calls go to your local proxy (default: `http://127.0.0.1:8788`) for translate, TTS, verb forms, and explain.
 - MyMemory does not auto-detect language; `auto` in the UI means **the extension guesses** a source language.
 
 ## Development

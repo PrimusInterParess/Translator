@@ -1,45 +1,60 @@
 # Translator (OversætMig)
 
-Chrome/Edge translation helper extension (**`translator-ui/`**) with an optional local Text-to-Speech proxy (**`translator-proxy/`**) for higher-quality voices.
+Chrome/Edge translation helper extension (**`translator-ui/`**) with a local ASP.NET Core proxy (**`translator-proxy/`**) for translation, high-quality TTS, and LLM-powered Danish learning tools.
 
 ## What’s inside
 
 - **`translator-ui/`**: MV3 browser extension (UI + content script + background service worker)
-  - Translates via **local proxy** → MyMemory (`https://api.mymemory.translated.net/`)
-  - Pronunciation via:
-    - **Browser/OS voice** (`chrome.tts`), or
-    - **Local proxy** (recommended) → Google Cloud Text-to-Speech
-- **`translator-proxy/`**: ASP.NET Core (net8.0) Web API that exposes:
-  - `POST /translate/mymemory`
-  - `POST /verbforms/gemini`
-  - `POST /explain/gemini`
-  - `POST /tts`
-  on `http://127.0.0.1:8788`
+  - **Translate** selected text via **local proxy** → MyMemory (`https://api.mymemory.translated.net/`)
+  - **Pronunciation** via browser/OS voice (`chrome.tts`) or **local proxy** → Google Cloud Text-to-Speech (recommended)
+  - **Verb forms** (Danish): infinitive, meaning, present/past/participle/imperative — calls proxy `POST /verbforms`
+  - **Explain**: mini-lesson for a sentence or a highlighted fragment — calls proxy `POST /explain`
+  - Features live in the extension popup (**Features** section) or a separate **Features** window
+- **`translator-proxy/`**: ASP.NET Core (net8.0) Web API on `http://127.0.0.1:8788`:
+  - `POST /translate/mymemory` — MyMemory translation
+  - `POST /verbforms` — Danish verb forms (LLM: Ollama or Gemini)
+  - `POST /explain` — phrase/sentence explanation (LLM: Ollama or Gemini)
+  - `POST /tts` — Google Cloud Text-to-Speech
+  - `GET /health` — health check
 
-For extension-only details (features, structure, debugging), also see `translator-ui/README.md`.
+For extension internals (message flow, modules, debugging), see `translator-ui/HOW_FE_WORKS.md`. For install/usage of the extension folder alone, see `translator-ui/README.md`.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
   subgraph Browser["Chrome / Edge (MV3 extension)"]
-    UI["Popup + Result UI (controls.html, result.html)"]
+    UI["Popup / Features UI (controls.html, features.html)"]
     CS["Content script (content.js)"]
     BG["Service worker (background.js)"]
     TTS["Browser/OS TTS (chrome.tts)"]
   end
 
-  MyMemory["MyMemory Translate API (api.mymemory.translated.net)"]
-  Proxy["Local proxy (translator-proxy @ 127.0.0.1:8788)"]
-  Google["Google Cloud Text-to-Speech API (texttospeech.googleapis.com)"]
+  MyMemory["MyMemory Translate API"]
+  Proxy["Local proxy @ 127.0.0.1:8788"]
+  Google["Google Cloud Text-to-Speech"]
+  LLM["Ollama (local) or Gemini (cloud)"]
 
   UI --> BG
+  UI --> Proxy
   CS --> BG
   BG --> Proxy
   BG --> TTS
   Proxy --> MyMemory
   Proxy --> Google
+  Proxy --> LLM
 ```
+
+**Request routing**
+
+| User action | Extension path | Proxy endpoint |
+|-------------|----------------|----------------|
+| Select text → hold → translate | content script → background message → proxy | `POST /translate/mymemory` |
+| Context menu “Translate selection” | background → proxy + result window | `POST /translate/mymemory` |
+| Speaker button | background → proxy or `chrome.tts` | `POST /tts` (proxy mode) |
+| Verb forms / Explain buttons | popup `fetch` directly to proxy | `POST /verbforms`, `POST /explain` |
+
+Translation and TTS go through the **background service worker**. Verb forms and Explain are **direct HTTP calls** from the popup UI to the proxy (no background relay).
 
 ## Quick start
 
@@ -56,13 +71,26 @@ flowchart LR
 
 The extension expects a local proxy at `http://127.0.0.1:8788`:
 
-- Translation calls: `POST /translate/mymemory`
-- Verb forms (Danish) calls: `POST /verbforms/gemini` (**new**)
-- High-quality pronunciation calls: `POST /tts` (when **Pronunciation voice** is set to “High quality voice (recommended)”)
+- Translation: `POST /translate/mymemory`
+- Verb forms (Danish): `POST /verbforms`
+- Explain (Danish tutor): `POST /explain`
+- High-quality pronunciation: `POST /tts` (when **Pronunciation voice** is “High quality voice (recommended)”)
+
+LLM features need **Ollama** (default) or **Gemini** configured on the proxy — see [Notes on secrets](#notes-on-secrets) below.
 
 #### Option A — .NET proxy (recommended)
 
-1. Put your API keys into `translator-proxy/appsettings.Development.local.json` (this filename is already in `.gitignore`):
+1. Put your API keys into `translator-proxy/appsettings.Development.local.json` (this filename is already in `.gitignore`).
+
+   **Default LLM provider is Ollama (local).** Install [Ollama](https://ollama.com), pull a model, and keep it running:
+
+   ```powershell
+   ollama pull qwen2.5:7b
+   ```
+
+   On Windows the Ollama app runs in the background (you do not need `ollama serve`).
+
+   Minimal config (TTS key only; Ollama uses defaults from `appsettings.json`):
 
 ```json
 {
@@ -70,10 +98,23 @@ The extension expects a local proxy at `http://127.0.0.1:8788`:
     "Google": {
       "ApiKey": "YOUR_KEY_HERE"
     }
+  }
+}
+```
+
+   To use **Gemini** instead, set `"Llm": { "Provider": "Gemini" }` and add a Gemini API key:
+
+```json
+{
+  "Llm": { "Provider": "Gemini" },
+  "Tts": {
+    "Google": {
+      "ApiKey": "YOUR_KEY_HERE"
+    }
   },
   "Gemini": {
     "ApiKey": "YOUR_KEY_HERE",
-    "Model": "gemini-1.5-flash",
+    "Model": "gemini-2.5-flash-lite",
     "GenerateContentBaseUrl": "https://generativelanguage.googleapis.com/v1/models",
     "EnableApiVersionFallback": true
   }
@@ -97,18 +138,21 @@ Health check: `GET http://127.0.0.1:8788/health`
 # Google Cloud Text-to-Speech (proxy `/tts`)
 Tts__Google__ApiKey=YOUR_KEY_HERE
 
-# Gemini API (proxy `/verbforms/gemini`)
-Gemini__ApiKey=YOUR_KEY_HERE
-Gemini__Model=gemini-2.5-flash-lite
-Gemini__GenerateContentBaseUrl=https://generativelanguage.googleapis.com/v1/models
-Gemini__EnableApiVersionFallback=true
+# LLM provider: Ollama (default) or Gemini
+Llm__Provider=Ollama
+Ollama__BaseUrl=http://127.0.0.1:11434
+Ollama__Model=qwen2.5:7b
 
-# Note: `/verbforms/gemini` uses Gemini JSON mode (response MIME type `application/json` + schema).
-# If your configured base URL rejects these fields (often as HTTP 400 "Unknown name ..."),
-# the proxy will retry once by swapping `/v1/` ↔ `/v1beta/`.
+# Gemini (only when Llm__Provider=Gemini)
+# Gemini__ApiKey=YOUR_KEY_HERE
+# Gemini__Model=gemini-2.5-flash-lite
+# Gemini__GenerateContentBaseUrl=https://generativelanguage.googleapis.com/v1/models
+# Gemini__EnableApiVersionFallback=true
 
 PORT=8788
 ```
+
+Before starting the proxy with Ollama: `ollama pull qwen2.5:7b` (or your `Ollama__Model`) and ensure the Ollama app is running.
 
 2. Start the proxy:
 
@@ -117,6 +161,19 @@ docker compose up -d --build
 ```
 
 Health check: `GET http://127.0.0.1:8788/health`
+
+### 3) Use LLM features in the extension
+
+1. Open the extension popup (toolbar icon).
+2. Expand **Features**.
+3. **Verb forms**: enter a Danish verb or phrase (e.g. `at spise` or `spiser`) → **Get verb forms**.
+4. **Explain**:
+   - **Sentence**: full sentence (e.g. `Det kan jeg godt, men ikke i dag.`)
+   - **Part to explain** (optional): highlight within the sentence (e.g. `det kan jeg godt`). Leave empty to explain the whole sentence.
+   - **Source lang** / **Explain in**: optional; defaults to your “Translate from” language and `en`.
+5. Use **Open Features in a window** if the popup feels cramped (`features.html`).
+
+First LLM request after idle can be slow (especially with local Ollama).
 
 ## Proxy API (quick reference)
 
@@ -131,38 +188,43 @@ All responses are JSON. Successful responses always include `ok: true`; errors i
   - `email` (optional; passed to MyMemory as `de=...`)
 - Response (ok): `{ "ok": true, "translatedText": "..." }`
 
-### `POST /verbforms/gemini` (Danish verb forms)
+### `POST /verbforms` (Danish verb forms)
+
+Backed by the configured LLM provider (`Llm:Provider` = `Ollama` or `Gemini`). Route name is historical; it is not Gemini-only.
 
 - Request:
-  - `text` (required, max 120 chars). Accepts `"at spise"` or `"spise"`; the proxy normalizes to the infinitive without `"at"`.
-- Response (ok):
-  - `infinitive`, `present`, `past`, `pastParticiple`, `imperative`
+  - `text` (required, max 120 chars) — verb, infinitive (`at spise`), or conjugated form; proxy returns dictionary infinitive without `at`
+  - `meaningIn` (optional, default `"en"`) — language for the gloss
+- Response (ok): `infinitive`, `meaning`, `present`, `past`, `pastParticiple`, `imperative`
 
 Example:
 
 ```powershell
-curl -Method POST "http://127.0.0.1:8788/verbforms/gemini" `
+curl -Method POST "http://127.0.0.1:8788/verbforms" `
   -ContentType "application/json" `
-  -Body '{"text":"at spise"}'
+  -Body '{"text":"at spise","meaningIn":"en"}'
 ```
 
-### `POST /explain/gemini` (Explain a phrase/fragment)
+### `POST /explain` (Explain a sentence or fragment)
+
+Backed by the same LLM provider as verb forms.
 
 - Request:
-  - `text` (required, max 500 chars)
-  - `context` (optional, max 2000 chars)
+  - `text` (required, max 500 chars) — **full sentence**
+  - `context` (optional, max 2000 chars) — **part to explain** within the sentence; omit or leave empty to explain the whole sentence
   - `sourceLang` (optional, e.g. `"da"`)
   - `explainIn` (optional, defaults to `"en"`)
 - Response (ok):
-  - `summary`, `what`, `when`, `why`
-  - `notes` (array), `alternatives` (array), `examples` (array of `{ source, meaning }`)
+  - `meta`: `{ sentence, fragment, explainIn }`
+  - `sentenceTranslation`, `translation` (gloss of the part), `inYourSentence`, `whenUsed`, `whyDifferent`
+  - `examples`: array of `{ source, meaning, context? }`
 
 Example:
 
 ```powershell
-curl -Method POST "http://127.0.0.1:8788/explain/gemini" `
+curl -Method POST "http://127.0.0.1:8788/explain" `
   -ContentType "application/json" `
-  -Body '{"text":"det kan jeg godt","context":"Det kan jeg godt, men ikke i dag.","sourceLang":"da","explainIn":"en"}'
+  -Body '{"text":"Det kan jeg godt, men ikke i dag.","context":"det kan jeg godt","sourceLang":"da","explainIn":"en"}'
 ```
 
 ### `POST /tts`
@@ -266,7 +328,16 @@ Optional publishing:
 ## Notes on secrets
 
 - The proxy reads Google TTS key from `Tts:Google:ApiKey` (env var: `Tts__Google__ApiKey`). For backward compatibility it also accepts `GOOGLE_TTS_API_KEY`.
-- The proxy reads Gemini key from `Gemini:ApiKey` (env var: `Gemini__ApiKey`). For backward compatibility it also accepts `GEMINI_API_KEY`.
+- **LLM provider** is selected via `Llm:Provider` (env var: `Llm__Provider`). Default: `Ollama`.
+- **Ollama** (local, no API key required):
+  - `Ollama:BaseUrl` (env var: `Ollama__BaseUrl`) default: `http://127.0.0.1:11434`
+  - `Ollama:Model` (env var: `Ollama__Model`) default: `qwen2.5:7b` (first request after idle can be slow; use a larger model if you have VRAM headroom)
+  - Endpoints `/verbforms` and `/explain` call Ollama’s OpenAI-compatible `/v1/chat/completions` when the provider is Ollama.
+  - **Ollama accuracy:** local models can still get Danish verb forms wrong; for reliable results set `Llm:Provider` to `Gemini`. Smaller/faster local models: `qwen2.5:3b` via `Ollama__Model`. Optional Windows env `OLLAMA_KEEP_ALIVE=30m` (restart Ollama) to reduce cold-start delays.
+  - Prompts for `/verbforms` and `/explain` are configurable under `Ollama:VerbForms`, `Ollama:Explain`, `Gemini:VerbForms`, and `Gemini:Explain` in `appsettings.json`.
+  - **Visual Studio:** stop Docker on port 8788, F5 `translator-proxy`; extension uses `http://127.0.0.1:8788`.
+- **Gemini** (cloud): set `Llm:Provider` to `Gemini` and configure:
+  - `Gemini:ApiKey` (env var: `Gemini__ApiKey`). For backward compatibility it also accepts `GEMINI_API_KEY`.
 - Gemini settings:
   - `Gemini:Model` (env var: `Gemini__Model`) default: `gemini-2.5-flash-lite`
   - `Gemini:GenerateContentBaseUrl` (env var: `Gemini__GenerateContentBaseUrl`) default: `https://generativelanguage.googleapis.com/v1/models`

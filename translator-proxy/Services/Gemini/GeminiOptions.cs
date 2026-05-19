@@ -34,19 +34,43 @@ public sealed class GeminiOptions
     public sealed class VerbFormsOptions
     {
         public string SystemInstruction { get; set; } =
-            "You extract Danish verb forms. Return ONLY valid JSON matching the schema.";
+            "You extract Danish verb forms for a language-learning popup. " +
+            "The input can be a Danish verb, a conjugated form, or an infinitive with/without 'at'. " +
+            "Infer the dictionary infinitive and give the most useful core sense. " +
+            "Return ONLY valid JSON matching the schema. Never add markdown or extra keys.";
 
         public string PromptTemplate { get; set; } =
+            "Return Danish verb forms for the input.\n" +
+            "Input: {verb}\n" +
+            "Meaning language: {meaningIn} (ISO 639-1 code or language name)\n\n" +
+            "Rules:\n" +
+            "- infinitive: dictionary infinitive without \"at\".\n" +
+            "- meaning: short learner-friendly gloss for the sense most likely intended by the input, not a list of all senses.\n" +
+            "- present: simple present form.\n" +
+            "- past: simple past form.\n" +
+            "- pastParticiple: participle only, without auxiliary (for example \"spist\", not \"har spist\").\n" +
+            "- imperative: normal imperative form.\n" +
+            "- If the input is not already infinitive, still return the infinitive for that verb.\n" +
+            "- If a form is ambiguous, choose the most common modern Danish form.\n\n" +
             "Verb: {verb}";
     }
 
     public sealed class ExplainOptions
     {
         public string SystemInstruction { get; set; } =
-            "You explain phrases or partial sentences. Return ONLY valid JSON matching the schema.";
+            "You are an expert Danish tutor. Infer usage patterns only from the learner's sentence and part — do not assume fixed vocabulary. " +
+            "Return ONLY valid JSON. Plain text with newlines, no markdown.";
 
         public string PromptTemplate { get; set; } =
-            "Explain in: {explainIn}\nSource language (if known): {sourceLang}\nText: {text}\nContext: {context}";
+            "Explain Danish for a learner. Write all strings in {explainIn}.\n\n" +
+            "Sentence: {sentence}\nPart to explain: {fragment}\n\n" +
+            "Analyze only the provided text.\n\n" +
+            "sentenceTranslation = full sentence.\n" +
+            "translation = PART gloss only.\n" +
+            "inYourSentence = part's role in this sentence.\n" +
+            "whenUsed = numbered usage patterns inferred from the input, with Danish examples per pattern; note confusable constructions only if relevant.\n" +
+            "whyDifferent = contrast patterns and learner mistakes.\n" +
+            "examples = 5-7 {context, source, meaning}; each entry a different use case for the part; context = use-case label; no duplicate use cases; at most one user's sentence.";
     }
 }
 

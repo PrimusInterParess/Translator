@@ -13,18 +13,22 @@
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
-      "applicationUrl": "http://localhost:5255",
+      "launchUrl": "health",
+      "applicationUrl": "http://127.0.0.1:8788",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "PORT": "8788"
       }
     },
     "https": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
-      "applicationUrl": "https://localhost:7079;http://localhost:5255",
+      "launchUrl": "health",
+      "applicationUrl": "http://127.0.0.1:8788",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "PORT": "8788"
       }
     },
     "IIS Express": {

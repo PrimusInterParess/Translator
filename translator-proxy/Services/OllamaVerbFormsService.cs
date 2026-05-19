@@ -1,22 +1,22 @@
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using translator_proxy.Models;
-using translator_proxy.Services.Gemini;
+using translator_proxy.Services.Llm;
+using translator_proxy.Services.Ollama;
 
 namespace translator_proxy.Services;
 
-public sealed class GeminiVerbFormsService : IVerbFormsService
+public sealed class OllamaVerbFormsService : IVerbFormsService
 {
-    private readonly IGeminiClient _gemini;
-    private readonly IOptions<GeminiOptions> _geminiOptions;
+    private readonly IOllamaClient _ollama;
+    private readonly IOptions<OllamaOptions> _options;
 
-    public GeminiVerbFormsService(IGeminiClient gemini, IOptions<GeminiOptions> geminiOptions)
+    public OllamaVerbFormsService(IOllamaClient ollama, IOptions<OllamaOptions> options)
     {
-        _gemini = gemini;
-        _geminiOptions = geminiOptions;
+        _ollama = ollama;
+        _options = options;
     }
 
     public async Task<VerbFormsServiceResult> GetVerbFormsAsync(VerbFormsRequest? req, CancellationToken cancellationToken)
@@ -47,33 +47,31 @@ public sealed class GeminiVerbFormsService : IVerbFormsService
         var meaningIn = (req?.MeaningIn ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(meaningIn)) meaningIn = "en";
 
-        var apiKey = (_geminiOptions.Value.ApiKey ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(apiKey))
+        if (!TryBuildSystemInstruction(_options.Value.VerbForms.SystemInstruction, out var systemInstruction, out var systemError))
         {
             return new VerbFormsServiceResult(
                 StatusCode: StatusCodes.Status500InternalServerError,
-                Body: new { ok = false, error = GeminiConstants.ErrMissingApiKey }
+                Body: new { ok = false, error = systemError }
             );
         }
 
-        var model = (_geminiOptions.Value.Model ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(model)) model = "gemini-2.5-flash-lite";
+        if (!TryBuildPrompt(_options.Value.VerbForms.PromptTemplate, cleaned, meaningIn, out var prompt, out var promptError))
+        {
+            return new VerbFormsServiceResult(
+                StatusCode: StatusCodes.Status500InternalServerError,
+                Body: new { ok = false, error = promptError }
+            );
+        }
 
-        var systemInstruction = (_geminiOptions.Value.VerbForms.SystemInstruction ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(systemInstruction))
-            systemInstruction = "Return ONLY valid JSON matching the provided schema.";
-
-        var promptTemplate = _geminiOptions.Value.VerbForms.PromptTemplate ?? string.Empty;
-        var prompt = BuildPrompt(promptTemplate, cleaned, meaningIn);
-
-        var body = BuildGenerateContentRequest(systemInstruction, prompt);
-        var result = await _gemini.GenerateContentAsync(model, body, cancellationToken);
+        var result = await _ollama.ChatAsync(systemInstruction, prompt, jsonMode: true, cancellationToken);
 
         if (!result.Ok)
         {
             var msg = !string.IsNullOrWhiteSpace(result.Error)
                 ? result.Error!
-                : (result.UpstreamStatusCode is { } s ? $"{GeminiConstants.HttpStatusFallbackPrefix}{s}" : GeminiConstants.ErrUnexpectedApiResponse);
+                : (result.UpstreamStatusCode is { } s
+                    ? $"{LlmConstants.HttpStatusFallbackPrefix}{s}"
+                    : LlmConstants.ErrUnexpectedApiResponse);
 
             return new VerbFormsServiceResult(
                 StatusCode: StatusCodes.Status502BadGateway,
@@ -81,16 +79,16 @@ public sealed class GeminiVerbFormsService : IVerbFormsService
             );
         }
 
-        var candidateText = result.CandidateText;
-        if (string.IsNullOrWhiteSpace(candidateText))
+        var raw = LlmJsonHelper.NormalizeJsonText(result.Content);
+        if (string.IsNullOrWhiteSpace(raw))
         {
             return new VerbFormsServiceResult(
                 StatusCode: StatusCodes.Status502BadGateway,
-                Body: new { ok = false, error = GeminiConstants.ErrGeminiEmptyResponse }
+                Body: new { ok = false, error = LlmConstants.ErrLlmEmptyResponse }
             );
         }
 
-        if (!TryParseVerbForms(candidateText!, out var forms, out var parseError))
+        if (!TryParseVerbForms(raw, out var forms, out var parseError))
         {
             return new VerbFormsServiceResult(
                 StatusCode: StatusCodes.Status502BadGateway,
@@ -121,77 +119,41 @@ public sealed class GeminiVerbFormsService : IVerbFormsService
         return s;
     }
 
-    private static JsonObject BuildGenerateContentRequest(string systemInstruction, string prompt)
+    private static bool TryBuildSystemInstruction(string? baseInstruction, out string systemInstruction, out string error)
     {
-        var req = new JsonObject
+        var instruction = (baseInstruction ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(instruction))
         {
-            ["contents"] = new JsonArray
-            {
-                new JsonObject
-                {
-                    ["role"] = "user",
-                    ["parts"] = new JsonArray
-                    {
-                        new JsonObject { ["text"] = prompt }
-                    }
-                }
-            }
-        };
-
-        if (!string.IsNullOrWhiteSpace(systemInstruction))
-        {
-            req["systemInstruction"] = new JsonObject
-            {
-                ["role"] = "system",
-                ["parts"] = new JsonArray
-                {
-                    new JsonObject { ["text"] = systemInstruction }
-                }
-            };
+            systemInstruction = string.Empty;
+            error = LlmConstants.ErrMissingOllamaVerbFormsSystemInstruction;
+            return false;
         }
 
-        req["generationConfig"] = new JsonObject
-        {
-            ["responseMimeType"] = "application/json",
-            ["responseSchema"] = new JsonObject
-            {
-                ["type"] = "OBJECT",
-                ["properties"] = new JsonObject
-                {
-                    ["infinitive"] = new JsonObject { ["type"] = "STRING" },
-                    ["meaning"] = new JsonObject { ["type"] = "STRING" },
-                    ["present"] = new JsonObject { ["type"] = "STRING" },
-                    ["past"] = new JsonObject { ["type"] = "STRING" },
-                    ["pastParticiple"] = new JsonObject { ["type"] = "STRING" },
-                    ["imperative"] = new JsonObject { ["type"] = "STRING" }
-                },
-                ["required"] = new JsonArray { "infinitive", "meaning", "present", "past", "pastParticiple", "imperative" }
-            }
-        };
-
-        return req;
+        systemInstruction = $"{instruction}\n\n{LlmConstants.VerbFormsJsonSchema}";
+        error = string.Empty;
+        return true;
     }
 
-    private static string BuildPrompt(string template, string verb, string meaningIn)
+    private static bool TryBuildPrompt(string? template, string verb, string meaningIn, out string prompt, out string error)
     {
         var t = (template ?? string.Empty).Trim();
-        var lang = string.IsNullOrWhiteSpace(meaningIn) ? "en" : meaningIn;
-
         if (string.IsNullOrWhiteSpace(t))
         {
-            return $"Verb: {verb}";
+            prompt = string.Empty;
+            error = LlmConstants.ErrMissingOllamaVerbFormsPromptTemplate;
+            return false;
         }
 
-        var prompt = t
+        var lang = string.IsNullOrWhiteSpace(meaningIn) ? "en" : meaningIn;
+        prompt = t
             .Replace("{verb}", verb, StringComparison.OrdinalIgnoreCase)
             .Replace("{meaningIn}", lang, StringComparison.OrdinalIgnoreCase);
 
         if (!t.Contains("{verb}", StringComparison.OrdinalIgnoreCase))
-        {
-            return $"{prompt}\nVerb: {verb}";
-        }
+            prompt = $"{prompt}\nVerb: {verb}";
 
-        return prompt;
+        error = string.Empty;
+        return true;
     }
 
     private sealed record VerbFormsDto(
@@ -215,7 +177,7 @@ public sealed class GeminiVerbFormsService : IVerbFormsService
     private static bool TryParseVerbForms(string jsonText, out VerbForms? forms, out string error)
     {
         forms = null;
-        error = GeminiConstants.ErrGeminiBadJson;
+        error = LlmConstants.ErrLlmBadJson;
 
         try
         {
@@ -226,7 +188,7 @@ public sealed class GeminiVerbFormsService : IVerbFormsService
 
             if (dto is null)
             {
-                error = GeminiConstants.ErrGeminiBadJson;
+                error = LlmConstants.ErrLlmBadJson;
                 return false;
             }
 
@@ -244,7 +206,7 @@ public sealed class GeminiVerbFormsService : IVerbFormsService
                 string.IsNullOrWhiteSpace(pastParticiple) ||
                 string.IsNullOrWhiteSpace(imperative))
             {
-                error = GeminiConstants.ErrUnexpectedApiResponse;
+                error = LlmConstants.ErrUnexpectedApiResponse;
                 return false;
             }
 
@@ -261,9 +223,8 @@ public sealed class GeminiVerbFormsService : IVerbFormsService
         }
         catch
         {
-            error = GeminiConstants.ErrGeminiBadJson;
+            error = LlmConstants.ErrLlmBadJson;
             return false;
         }
     }
 }
-
