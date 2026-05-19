@@ -4,18 +4,18 @@ namespace translator_proxy.Services.Llm;
 
 internal static class ExplainGeminiSchema
 {
+    private static JsonObject StringType() => new() { ["type"] = "STRING" };
+
     public static JsonObject BuildResponseSchema()
     {
-        var stringType = new JsonObject { ["type"] = "STRING" };
-
         var exampleItem = new JsonObject
         {
             ["type"] = "OBJECT",
             ["properties"] = new JsonObject
             {
-                ["context"] = stringType,
-                ["source"] = stringType,
-                ["meaning"] = stringType
+                ["context"] = StringType(),
+                ["source"] = StringType(),
+                ["meaning"] = StringType()
             },
             ["required"] = new JsonArray { "context", "source", "meaning" }
         };
@@ -25,11 +25,11 @@ internal static class ExplainGeminiSchema
             ["type"] = "OBJECT",
             ["properties"] = new JsonObject
             {
-                ["sentenceTranslation"] = stringType,
-                ["translation"] = stringType,
-                ["inYourSentence"] = stringType,
-                ["whenUsed"] = stringType,
-                ["whyDifferent"] = stringType,
+                ["sentenceTranslation"] = StringType(),
+                ["translation"] = StringType(),
+                ["inYourSentence"] = StringType(),
+                ["whenUsed"] = StringType(),
+                ["whyDifferent"] = StringType(),
                 ["examples"] = new JsonObject
                 {
                     ["type"] = "ARRAY",
