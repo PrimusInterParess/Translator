@@ -1,4 +1,3 @@
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
@@ -21,38 +20,9 @@ public sealed class GeminiExplainService : IExplainService
 
     public async Task<ExplainServiceResult> ExplainAsync(ExplainRequest? req, CancellationToken cancellationToken)
     {
-        var text = (req?.Text ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(text))
+        if (ExplainRequestValidator.Validate(req, out var input) is { } validationError)
         {
-            return new ExplainServiceResult(
-                StatusCode: StatusCodes.Status400BadRequest,
-                Body: new { ok = false, error = GeminiConstants.ErrMissingText }
-            );
-        }
-
-        if (text.Length > GeminiConstants.MaxExplainTextLength)
-        {
-            return new ExplainServiceResult(
-                StatusCode: StatusCodes.Status400BadRequest,
-                Body: new
-                {
-                    ok = false,
-                    error = string.Format(GeminiConstants.ErrTextTooLongFormat, GeminiConstants.MaxExplainTextLength)
-                }
-            );
-        }
-
-        var context = (req?.Context ?? string.Empty).Trim();
-        if (context.Length > GeminiConstants.MaxExplainContextLength)
-        {
-            return new ExplainServiceResult(
-                StatusCode: StatusCodes.Status400BadRequest,
-                Body: new
-                {
-                    ok = false,
-                    error = string.Format(GeminiConstants.ErrContextTooLongFormat, GeminiConstants.MaxExplainContextLength)
-                }
-            );
+            return validationError;
         }
 
         var apiKey = (_geminiOptions.Value.ApiKey ?? string.Empty).Trim();
@@ -67,15 +37,15 @@ public sealed class GeminiExplainService : IExplainService
         var model = (_geminiOptions.Value.Model ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(model)) model = "gemini-2.5-flash-lite";
 
-        var explainIn = (req?.ExplainIn ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(explainIn)) explainIn = "en";
-
-        var sourceLang = (req?.SourceLang ?? string.Empty).Trim();
-
         var systemInstruction = (_geminiOptions.Value.Explain.SystemInstruction ?? string.Empty).Trim();
 
-        var promptTemplate = _geminiOptions.Value.Explain.PromptTemplate ?? string.Empty;
-        var prompt = BuildPrompt(promptTemplate, text, context, sourceLang, explainIn);
+        var promptTemplate = (_geminiOptions.Value.Explain.PromptTemplate ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(promptTemplate))
+        {
+            promptTemplate = new GeminiOptions.ExplainOptions().PromptTemplate;
+        }
+
+        var prompt = ExplainPromptBuilder.Build(promptTemplate, input);
 
         var body = BuildGenerateContentRequest(systemInstruction, prompt);
         var result = await _gemini.GenerateContentAsync(model, body, cancellationToken);
@@ -92,27 +62,7 @@ public sealed class GeminiExplainService : IExplainService
             );
         }
 
-        var raw = LlmJsonHelper.NormalizeJsonText(result.CandidateText);
-        if (string.IsNullOrWhiteSpace(raw))
-        {
-            return new ExplainServiceResult(
-                StatusCode: StatusCodes.Status502BadGateway,
-                Body: new { ok = false, error = GeminiConstants.ErrGeminiEmptyResponse }
-            );
-        }
-
-        if (!ExplainJsonParser.TryParse(raw, out var parsed, out var parseError))
-        {
-            return new ExplainServiceResult(
-                StatusCode: StatusCodes.Status502BadGateway,
-                Body: new { ok = false, error = parseError }
-            );
-        }
-
-        return new ExplainServiceResult(
-            StatusCode: StatusCodes.Status200OK,
-            Body: parsed!.ToApiBody(text, context, explainIn)
-        );
+        return ExplainResponseMapper.FromLlmText(result.CandidateText, input, GeminiConstants.ErrGeminiEmptyResponse);
     }
 
     private static JsonObject BuildGenerateContentRequest(string systemInstruction, string prompt)
@@ -151,24 +101,6 @@ public sealed class GeminiExplainService : IExplainService
         };
 
         return req;
-    }
-
-    private static string BuildPrompt(string template, string text, string context, string sourceLang, string explainIn)
-    {
-        var t = (template ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(t))
-        {
-            t = new GeminiOptions.ExplainOptions().PromptTemplate;
-        }
-
-        var fragment = string.IsNullOrWhiteSpace(context) ? "(none)" : context;
-        return t
-            .Replace("{sentence}", text)
-            .Replace("{fragment}", fragment)
-            .Replace("{text}", text)
-            .Replace("{context}", fragment)
-            .Replace("{sourceLang}", string.IsNullOrWhiteSpace(sourceLang) ? "(infer)" : sourceLang)
-            .Replace("{explainIn}", string.IsNullOrWhiteSpace(explainIn) ? "en" : explainIn);
     }
 
 }

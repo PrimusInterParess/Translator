@@ -19,44 +19,10 @@ public sealed class OllamaExplainService : IExplainService
 
     public async Task<ExplainServiceResult> ExplainAsync(ExplainRequest? req, CancellationToken cancellationToken)
     {
-        var text = (req?.Text ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(text))
+        if (ExplainRequestValidator.Validate(req, out var input) is { } validationError)
         {
-            return new ExplainServiceResult(
-                StatusCode: StatusCodes.Status400BadRequest,
-                Body: new { ok = false, error = GeminiConstants.ErrMissingText }
-            );
+            return validationError;
         }
-
-        if (text.Length > GeminiConstants.MaxExplainTextLength)
-        {
-            return new ExplainServiceResult(
-                StatusCode: StatusCodes.Status400BadRequest,
-                Body: new
-                {
-                    ok = false,
-                    error = string.Format(GeminiConstants.ErrTextTooLongFormat, GeminiConstants.MaxExplainTextLength)
-                }
-            );
-        }
-
-        var context = (req?.Context ?? string.Empty).Trim();
-        if (context.Length > GeminiConstants.MaxExplainContextLength)
-        {
-            return new ExplainServiceResult(
-                StatusCode: StatusCodes.Status400BadRequest,
-                Body: new
-                {
-                    ok = false,
-                    error = string.Format(GeminiConstants.ErrContextTooLongFormat, GeminiConstants.MaxExplainContextLength)
-                }
-            );
-        }
-
-        var explainIn = (req?.ExplainIn ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(explainIn)) explainIn = "en";
-
-        var sourceLang = (req?.SourceLang ?? string.Empty).Trim();
 
         if (!TryBuildSystemInstruction(_options.Value.Explain.SystemInstruction, out var systemInstruction, out var systemError))
         {
@@ -66,7 +32,7 @@ public sealed class OllamaExplainService : IExplainService
             );
         }
 
-        if (!TryBuildPrompt(_options.Value.Explain.PromptTemplate, text, context, sourceLang, explainIn, out var prompt, out var promptError))
+        if (!TryBuildPrompt(_options.Value.Explain.PromptTemplate, input, out var prompt, out var promptError))
         {
             return new ExplainServiceResult(
                 StatusCode: StatusCodes.Status500InternalServerError,
@@ -90,27 +56,7 @@ public sealed class OllamaExplainService : IExplainService
             );
         }
 
-        var raw = LlmJsonHelper.NormalizeJsonText(result.Content);
-        if (string.IsNullOrWhiteSpace(raw))
-        {
-            return new ExplainServiceResult(
-                StatusCode: StatusCodes.Status502BadGateway,
-                Body: new { ok = false, error = LlmConstants.ErrLlmEmptyResponse }
-            );
-        }
-
-        if (!ExplainJsonParser.TryParse(raw, out var parsed, out var parseError))
-        {
-            return new ExplainServiceResult(
-                StatusCode: StatusCodes.Status502BadGateway,
-                Body: new { ok = false, error = parseError }
-            );
-        }
-
-        return new ExplainServiceResult(
-            StatusCode: StatusCodes.Status200OK,
-            Body: parsed!.ToApiBody(text, context, explainIn)
-        );
+        return ExplainResponseMapper.FromLlmText(result.Content, input, LlmConstants.ErrLlmEmptyResponse);
     }
 
     private static bool TryBuildSystemInstruction(string? baseInstruction, out string systemInstruction, out string error)
@@ -123,6 +69,7 @@ public sealed class OllamaExplainService : IExplainService
             return false;
         }
 
+        // Ollama has no responseSchema field, so keep the JSON contract in the system instruction.
         systemInstruction = $"{instruction}\n\n{LlmConstants.ExplainJsonSchema}";
         error = string.Empty;
         return true;
@@ -130,10 +77,7 @@ public sealed class OllamaExplainService : IExplainService
 
     private static bool TryBuildPrompt(
         string? template,
-        string text,
-        string context,
-        string sourceLang,
-        string explainIn,
+        ExplainValidatedInput input,
         out string prompt,
         out string error)
     {
@@ -145,14 +89,7 @@ public sealed class OllamaExplainService : IExplainService
             return false;
         }
 
-        var fragment = string.IsNullOrWhiteSpace(context) ? "(none)" : context;
-        prompt = t
-            .Replace("{sentence}", text)
-            .Replace("{fragment}", fragment)
-            .Replace("{text}", text)
-            .Replace("{context}", fragment)
-            .Replace("{sourceLang}", string.IsNullOrWhiteSpace(sourceLang) ? "(infer)" : sourceLang)
-            .Replace("{explainIn}", string.IsNullOrWhiteSpace(explainIn) ? "en" : explainIn);
+        prompt = ExplainPromptBuilder.Build(t, input);
         error = string.Empty;
         return true;
     }

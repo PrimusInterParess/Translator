@@ -3,8 +3,6 @@ namespace translator_proxy.Services;
 internal static class GeminiConstants
 {
     public const int MaxTextLength = 120;
-    public const int MaxExplainTextLength = 500;
-    public const int MaxExplainContextLength = 2000;
 
     public const string GeminiConfigSection = "Gemini";
 

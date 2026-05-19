@@ -2,6 +2,9 @@ namespace translator_proxy.Services;
 
 internal static class LlmConstants
 {
+    public const int MaxExplainTextLength = 500;
+    public const int MaxExplainContextLength = 2000;
+
     public const string ErrMissingOllamaModel = "Server is missing Ollama:Model configuration";
     public const string ErrMissingOllamaBaseUrl = "Server is missing Ollama:BaseUrl configuration";
     public const string ErrMissingOllamaExplainSystemInstruction = "Server is missing Ollama:Explain:SystemInstruction configuration";
@@ -9,6 +12,9 @@ internal static class LlmConstants
     public const string ErrMissingOllamaVerbFormsSystemInstruction = "Server is missing Ollama:VerbForms:SystemInstruction configuration";
     public const string ErrMissingOllamaVerbFormsPromptTemplate = "Server is missing Ollama:VerbForms:PromptTemplate configuration";
 
+    public const string ErrMissingText = "Missing text";
+    public const string ErrTextTooLongFormat = "Text too long (max {0} chars)";
+    public const string ErrContextTooLongFormat = "Context too long (max {0} chars)";
     public const string ErrLlmEmptyResponse = "LLM returned empty response";
     public const string ErrLlmBadJson = "LLM returned invalid JSON";
     public const string ErrUnexpectedApiResponse = "Unexpected API response";
