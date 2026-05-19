@@ -1,10 +1,9 @@
-using System.Text.Json;
 using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using translator_proxy.Models;
 using translator_proxy.Services.Gemini;
+using translator_proxy.Services.Llm;
 
 namespace translator_proxy.Services;
 
@@ -21,31 +20,10 @@ public sealed class GeminiVerbFormsService : IVerbFormsService
 
     public async Task<VerbFormsServiceResult> GetVerbFormsAsync(VerbFormsRequest? req, CancellationToken cancellationToken)
     {
-        var text = (req?.Text ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(text))
+        if (VerbFormsRequestValidator.Validate(req, out var input) is { } validationError)
         {
-            return new VerbFormsServiceResult(
-                StatusCode: StatusCodes.Status400BadRequest,
-                Body: new { ok = false, error = GeminiConstants.ErrMissingText }
-            );
+            return validationError;
         }
-
-        if (text.Length > GeminiConstants.MaxTextLength)
-        {
-            return new VerbFormsServiceResult(
-                StatusCode: StatusCodes.Status400BadRequest,
-                Body: new
-                {
-                    ok = false,
-                    error = string.Format(GeminiConstants.ErrTextTooLongFormat, GeminiConstants.MaxTextLength)
-                }
-            );
-        }
-
-        var cleaned = NormalizeDanishVerb(text);
-
-        var meaningIn = (req?.MeaningIn ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(meaningIn)) meaningIn = "en";
 
         var apiKey = (_geminiOptions.Value.ApiKey ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(apiKey))
@@ -64,7 +42,7 @@ public sealed class GeminiVerbFormsService : IVerbFormsService
             systemInstruction = "Return ONLY valid JSON matching the provided schema.";
 
         var promptTemplate = _geminiOptions.Value.VerbForms.PromptTemplate ?? string.Empty;
-        var prompt = BuildPrompt(promptTemplate, cleaned, meaningIn);
+        var prompt = VerbFormsPromptBuilder.BuildLenient(promptTemplate, input);
 
         var body = BuildGenerateContentRequest(systemInstruction, prompt);
         var result = await _gemini.GenerateContentAsync(model, body, cancellationToken);
@@ -81,44 +59,10 @@ public sealed class GeminiVerbFormsService : IVerbFormsService
             );
         }
 
-        var candidateText = result.CandidateText;
-        if (string.IsNullOrWhiteSpace(candidateText))
-        {
-            return new VerbFormsServiceResult(
-                StatusCode: StatusCodes.Status502BadGateway,
-                Body: new { ok = false, error = GeminiConstants.ErrGeminiEmptyResponse }
-            );
-        }
-
-        if (!TryParseVerbForms(candidateText!, out var forms, out var parseError))
-        {
-            return new VerbFormsServiceResult(
-                StatusCode: StatusCodes.Status502BadGateway,
-                Body: new { ok = false, error = parseError }
-            );
-        }
-
-        return new VerbFormsServiceResult(
-            StatusCode: StatusCodes.Status200OK,
-            Body: new
-            {
-                ok = true,
-                infinitive = forms!.Infinitive,
-                meaning = forms.Meaning,
-                present = forms.Present,
-                past = forms.Past,
-                pastParticiple = forms.PastParticiple,
-                imperative = forms.Imperative
-            }
-        );
-    }
-
-    private static string NormalizeDanishVerb(string input)
-    {
-        var s = input.Trim();
-        if (s.StartsWith("at ", StringComparison.OrdinalIgnoreCase))
-            s = s[3..].Trim();
-        return s;
+        return VerbFormsResponseMapper.FromLlmText(
+            result.CandidateText,
+            GeminiConstants.ErrGeminiEmptyResponse,
+            GeminiConstants.ErrGeminiBadJson);
     }
 
     private static JsonObject BuildGenerateContentRequest(string systemInstruction, string prompt)
@@ -153,117 +97,10 @@ public sealed class GeminiVerbFormsService : IVerbFormsService
         req["generationConfig"] = new JsonObject
         {
             ["responseMimeType"] = "application/json",
-            ["responseSchema"] = new JsonObject
-            {
-                ["type"] = "OBJECT",
-                ["properties"] = new JsonObject
-                {
-                    ["infinitive"] = new JsonObject { ["type"] = "STRING" },
-                    ["meaning"] = new JsonObject { ["type"] = "STRING" },
-                    ["present"] = new JsonObject { ["type"] = "STRING" },
-                    ["past"] = new JsonObject { ["type"] = "STRING" },
-                    ["pastParticiple"] = new JsonObject { ["type"] = "STRING" },
-                    ["imperative"] = new JsonObject { ["type"] = "STRING" }
-                },
-                ["required"] = new JsonArray { "infinitive", "meaning", "present", "past", "pastParticiple", "imperative" }
-            }
+            ["responseSchema"] = VerbFormsGeminiSchema.BuildResponseSchema()
         };
 
         return req;
-    }
-
-    private static string BuildPrompt(string template, string verb, string meaningIn)
-    {
-        var t = (template ?? string.Empty).Trim();
-        var lang = string.IsNullOrWhiteSpace(meaningIn) ? "en" : meaningIn;
-
-        if (string.IsNullOrWhiteSpace(t))
-        {
-            return $"Verb: {verb}";
-        }
-
-        var prompt = t
-            .Replace("{verb}", verb, StringComparison.OrdinalIgnoreCase)
-            .Replace("{meaningIn}", lang, StringComparison.OrdinalIgnoreCase);
-
-        if (!t.Contains("{verb}", StringComparison.OrdinalIgnoreCase))
-        {
-            return $"{prompt}\nVerb: {verb}";
-        }
-
-        return prompt;
-    }
-
-    private sealed record VerbFormsDto(
-        [property: JsonPropertyName("infinitive")] string? Infinitive,
-        [property: JsonPropertyName("meaning")] string? Meaning,
-        [property: JsonPropertyName("present")] string? Present,
-        [property: JsonPropertyName("past")] string? Past,
-        [property: JsonPropertyName("pastParticiple")] string? PastParticiple,
-        [property: JsonPropertyName("imperative")] string? Imperative
-    );
-
-    private sealed record VerbForms(
-        string Infinitive,
-        string Meaning,
-        string Present,
-        string Past,
-        string PastParticiple,
-        string Imperative
-    );
-
-    private static bool TryParseVerbForms(string jsonText, out VerbForms? forms, out string error)
-    {
-        forms = null;
-        error = GeminiConstants.ErrGeminiBadJson;
-
-        try
-        {
-            var dto = JsonSerializer.Deserialize<VerbFormsDto>(
-                jsonText,
-                new JsonSerializerOptions(JsonSerializerDefaults.Web)
-            );
-
-            if (dto is null)
-            {
-                error = GeminiConstants.ErrGeminiBadJson;
-                return false;
-            }
-
-            var infinitive = (dto.Infinitive ?? string.Empty).Trim();
-            var meaning = (dto.Meaning ?? string.Empty).Trim();
-            var present = (dto.Present ?? string.Empty).Trim();
-            var past = (dto.Past ?? string.Empty).Trim();
-            var pastParticiple = (dto.PastParticiple ?? string.Empty).Trim();
-            var imperative = (dto.Imperative ?? string.Empty).Trim();
-
-            if (string.IsNullOrWhiteSpace(infinitive) ||
-                string.IsNullOrWhiteSpace(meaning) ||
-                string.IsNullOrWhiteSpace(present) ||
-                string.IsNullOrWhiteSpace(past) ||
-                string.IsNullOrWhiteSpace(pastParticiple) ||
-                string.IsNullOrWhiteSpace(imperative))
-            {
-                error = GeminiConstants.ErrUnexpectedApiResponse;
-                return false;
-            }
-
-            forms = new VerbForms(
-                Infinitive: NormalizeDanishVerb(infinitive),
-                Meaning: meaning,
-                Present: present,
-                Past: past,
-                PastParticiple: pastParticiple,
-                Imperative: imperative
-            );
-            error = string.Empty;
-            return true;
-        }
-        catch
-        {
-            error = GeminiConstants.ErrGeminiBadJson;
-            return false;
-        }
     }
 }
 

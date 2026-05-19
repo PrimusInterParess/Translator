@@ -2,8 +2,6 @@ namespace translator_proxy.Services;
 
 internal static class GeminiConstants
 {
-    public const int MaxTextLength = 120;
-
     public const string GeminiConfigSection = "Gemini";
 
     public const string GeminiApiKeyConfigPath = "Gemini:ApiKey";

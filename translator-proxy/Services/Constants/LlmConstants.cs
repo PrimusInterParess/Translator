@@ -4,6 +4,7 @@ internal static class LlmConstants
 {
     public const int MaxExplainTextLength = 500;
     public const int MaxExplainContextLength = 2000;
+    public const int MaxVerbFormsTextLength = 120;
 
     public const string ErrMissingOllamaModel = "Server is missing Ollama:Model configuration";
     public const string ErrMissingOllamaBaseUrl = "Server is missing Ollama:BaseUrl configuration";
