@@ -47,11 +47,11 @@ internal static class LlmConstants
     public const string DegreeComparisonJsonSchema =
         "Return a single JSON object with exactly these top-level keys:\n" +
         "- detectedInputLanguage (string: language name of the input word)\n" +
-        "- targetLanguage (string: language name used for the comparison forms)\n" +
-        "- positive (object: { form, translation } — positive degree in target language plus translation)\n" +
-        "- comparative (object: { form, translation } — comparative degree in target language plus translation)\n" +
-        "- superlative (object: { form, translation } — superlative degree in target language plus translation)\n" +
-        "- isIrregular (boolean: true when the comparison pattern is irregular)\n" +
-        "- note (string: brief note about irregularity or periphrastic forms; empty string if none)\n" +
-        "No markdown, no code fences, no extra keys.";
+        "- targetLanguage (string: must be \"Danish\")\n" +
+        "- positive (object: { form, translation } — Danish positive/base adjective; translation is a short gloss in the requested translation language, never a copy of form)\n" +
+        "- comparative (object: { form, translation } — Danish comparative; translation glosses that degree only, e.g. \"heavier\")\n" +
+        "- superlative (object: { form, translation } — Danish superlative; translation glosses that degree only, e.g. \"heaviest\")\n" +
+        "- isIrregular (boolean: true for suppletive/irregular Danish patterns such as stor/større/størst)\n" +
+        "- note (string: brief note if irregular, input was corrected, or periphrastic comparison is required; empty string if none)\n" +
+        "All form values must be Danish. Prefer standard Danish -ere/-est inflection; use mere/mest only when Danish normally does for that adjective. No markdown, no code fences, no extra keys.";
 }

@@ -59,23 +59,30 @@ public sealed class GeminiOptions
     public sealed class DegreeComparisonOptions
     {
         public string SystemInstruction { get; set; } =
-            "You are a linguistic tool for degrees of comparison. " +
-            "Detect the input language automatically. " +
-            "Return comparison forms in the requested target language. " +
+            "You are an expert Danish morphology assistant for a language-learning app. " +
+            "The learner may type an adjective in any language, or a Danish adjective in any degree (positive, comparative, superlative), including common misspellings. " +
+            "Always return the three comparison degrees as proper Danish forms. " +
             "Return ONLY valid JSON matching the schema. Never add markdown or extra keys.";
 
         public string PromptTemplate { get; set; } =
-            "Provide degrees of comparison for the input word.\n" +
+            "Provide Danish degrees of comparison for the input.\n" +
             "Input word: {word}\n" +
             "Target language for forms: {targetLanguage}\n" +
-            "Translation language: {translationIn} (ISO 639-1 code or language name)\n\n" +
-            "Rules:\n" +
-            "- Detect the input language automatically.\n" +
-            "- If the input is not already in the target language, translate to the target language first, then provide comparison degrees in the target language.\n" +
-            "- positive, comparative, superlative: each with form (in target language) and translation (in translation language).\n" +
-            "- If the comparison is irregular, set isIrregular to true and explain briefly in note.\n" +
-            "- If the target language uses periphrastic comparison for this adjective, use the natural periphrastic forms.\n" +
-            "- If note is not needed, return an empty string.\n\n" +
+            "Translation language for glosses: {translationIn} (ISO 639-1 code or language name)\n\n" +
+            "Steps:\n" +
+            "1. detectedInputLanguage — identify the language of the input (English, Danish, German, etc.). If the word looks like a Danish adjective or a likely misspelling of one (e.g. tugeste ≈ tungest), treat it as Danish.\n" +
+            "2. Resolve the Danish base (positive) adjective first:\n" +
+            "   - If input is not Danish, translate to the most common Danish equivalent.\n" +
+            "   - If input is a Danish comparative or superlative, infer the positive/base form.\n" +
+            "   - If input is misspelled Danish, correct it before inflecting.\n" +
+            "3. targetLanguage must always be \"Danish\".\n" +
+            "4. positive.form — Danish positive/base adjective (e.g. tung, stor, god).\n" +
+            "5. comparative.form — standard Danish comparative (e.g. tungere, større, bedre).\n" +
+            "6. superlative.form — standard Danish superlative (e.g. tungest, størst, bedst).\n" +
+            "7. Each translation — short gloss in {translationIn} for that degree only (positive → \"heavy\", comparative → \"heavier\", superlative → \"heaviest\"). Never repeat the Danish form as the translation.\n" +
+            "8. Prefer standard Danish morphological comparison (-ere/-est or irregular). Use \"mere …\" / \"mest …\" only when Danish normally uses periphrastic comparison for that adjective.\n" +
+            "9. isIrregular — true for suppletive/irregular patterns (stor/større/størst, god/bedre/bedst).\n" +
+            "10. note — brief note if irregular, input was corrected, or periphrastic; otherwise empty string.\n\n" +
             "Word: {word}";
     }
 
