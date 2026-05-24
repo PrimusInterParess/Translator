@@ -69,6 +69,10 @@
     const verbFormsBtn = document.getElementById('verbFormsBtn');
     const verbFormsStatus = document.getElementById('verbFormsStatus');
     const verbFormsOutput = document.getElementById('verbFormsOutput');
+    const degreeComparisonTextInput = document.getElementById('degreeComparisonTextInput');
+    const degreeComparisonBtn = document.getElementById('degreeComparisonBtn');
+    const degreeComparisonStatus = document.getElementById('degreeComparisonStatus');
+    const degreeComparisonOutput = document.getElementById('degreeComparisonOutput');
     const explainTextInput = document.getElementById('explainTextInput');
     const explainContextInput = document.getElementById('explainContextInput');
     const explainSourceLangInput = document.getElementById('explainSourceLangInput');
@@ -438,6 +442,166 @@
 
       verbFormsTextInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) verbFormsBtn.click();
+      });
+    }
+
+    if (degreeComparisonBtn && degreeComparisonTextInput && degreeComparisonOutput) {
+      const setStatus = (msg) => {
+        if (degreeComparisonStatus) degreeComparisonStatus.textContent = msg || '';
+      };
+
+      const clearOutput = () => {
+        degreeComparisonOutput.textContent = '';
+        try {
+          degreeComparisonOutput.replaceChildren();
+        } catch {
+          while (degreeComparisonOutput.firstChild) degreeComparisonOutput.removeChild(degreeComparisonOutput.firstChild);
+        }
+      };
+
+      const setRawOutput = (v) => {
+        const pre = document.createElement('pre');
+        pre.textContent = String(v ?? '');
+        degreeComparisonOutput.appendChild(pre);
+      };
+
+      const isDegreeForm = (v) =>
+        v &&
+        typeof v === 'object' &&
+        typeof v.form === 'string' &&
+        typeof v.translation === 'string';
+
+      const isDegreeComparisonResponse = (v) => {
+        if (!v || typeof v !== 'object') return false;
+        if (v.ok !== true) return false;
+        return (
+          typeof v.detectedInputLanguage === 'string' &&
+          typeof v.targetLanguage === 'string' &&
+          isDegreeForm(v.positive) &&
+          isDegreeForm(v.comparative) &&
+          isDegreeForm(v.superlative)
+        );
+      };
+
+      const formatDegreeValue = (degree) => {
+        const form = String(degree?.form || '').trim();
+        const translation = String(degree?.translation || '').trim();
+        if (!form) return '';
+        return translation ? `${form} (${translation})` : form;
+      };
+
+      const renderDegreeComparison = (v) => {
+        const header = document.createElement('div');
+        header.className = 'verbFormsHeader';
+        header.textContent = `${String(v.targetLanguage || '').trim()} comparison`;
+
+        const meta = document.createElement('div');
+        meta.className = 'verbFormsMeaning';
+        meta.textContent = `Input: ${String(v.detectedInputLanguage || '').trim()}`;
+
+        const grid = document.createElement('div');
+        grid.className = 'verbFormsGrid';
+
+        const addRow = (label, value) => {
+          const l = document.createElement('div');
+          l.className = 'verbFormsLabel';
+          l.textContent = label;
+          const val = document.createElement('div');
+          val.className = 'verbFormsValue';
+          val.textContent = value;
+          grid.append(l, val);
+        };
+
+        addRow('Positive', formatDegreeValue(v.positive));
+        addRow('Comparative', formatDegreeValue(v.comparative));
+        addRow('Superlative', formatDegreeValue(v.superlative));
+
+        degreeComparisonOutput.append(header, meta, grid);
+
+        const note = String(v.note || '').trim();
+        if (v.isIrregular || note) {
+          const noteEl = document.createElement('div');
+          noteEl.className = 'verbFormsMeaning';
+          noteEl.style.marginTop = '10px';
+          noteEl.textContent = note || 'Irregular comparison pattern.';
+          degreeComparisonOutput.appendChild(noteEl);
+        }
+      };
+
+      const setOutput = (v) => {
+        clearOutput();
+        if (v == null) return;
+
+        if (typeof v === 'string') {
+          setRawOutput(v);
+          return;
+        }
+
+        if (isDegreeComparisonResponse(v)) {
+          renderDegreeComparison(v);
+          return;
+        }
+
+        try {
+          setRawOutput(JSON.stringify(v, null, 2));
+        } catch {
+          setRawOutput(String(v));
+        }
+      };
+
+      const callDegreeComparison = async () => {
+        const text = String(degreeComparisonTextInput.value || '').trim();
+        if (!text) {
+          setStatus('Type something first.');
+          setOutput(null);
+          return;
+        }
+
+        degreeComparisonBtn.disabled = true;
+        setStatus('Loading…');
+        setOutput(null);
+
+        const url = C.DEFAULTS.degreeComparisonProxyUrl;
+        const r = await fetch(url, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            text,
+            targetLanguage: 'Danish',
+            translationIn: 'en',
+          }),
+        });
+
+        const d = await (async () => {
+          try {
+            return await r.json();
+          } catch {
+            return null;
+          }
+        })();
+
+        if (!r.ok) {
+          const statusText = r.status ? `HTTP ${r.status}` : 'HTTP error';
+          const msg = typeof d?.error === 'string' && d.error.trim() ? d.error.trim() : statusText;
+          throw new Error(msg);
+        }
+
+        setStatus('Done.');
+        setOutput(d ?? (await r.text()));
+      };
+
+      degreeComparisonBtn.addEventListener('click', () => {
+        callDegreeComparison()
+          .catch((e) => {
+            setStatus(e?.message ? String(e.message) : 'Request failed');
+          })
+          .finally(() => {
+            degreeComparisonBtn.disabled = false;
+          });
+      });
+
+      degreeComparisonTextInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) degreeComparisonBtn.click();
       });
     }
 

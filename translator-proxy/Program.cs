@@ -27,6 +27,7 @@ if (llmProvider.Equals("Ollama", StringComparison.OrdinalIgnoreCase))
     });
     builder.Services.AddSingleton<IOllamaClient, OllamaClient>();
     builder.Services.AddSingleton<IVerbFormsService, OllamaVerbFormsService>();
+    builder.Services.AddSingleton<IDegreeComparisonService, OllamaDegreeComparisonService>();
     builder.Services.AddSingleton<IExplainService, OllamaExplainService>();
 }
 else
@@ -34,6 +35,7 @@ else
     builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection("Gemini"));
     builder.Services.AddSingleton<IGeminiClient, GeminiClient>();
     builder.Services.AddSingleton<IVerbFormsService, GeminiVerbFormsService>();
+    builder.Services.AddSingleton<IDegreeComparisonService, GeminiDegreeComparisonService>();
     builder.Services.AddSingleton<IExplainService, GeminiExplainService>();
 }
 

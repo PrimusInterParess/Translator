@@ -29,6 +29,7 @@ public sealed class GeminiOptions
     public string ApiKeyQueryParamName { get; set; } = "";
 
     public VerbFormsOptions VerbForms { get; set; } = new();
+    public DegreeComparisonOptions DegreeComparison { get; set; } = new();
     public ExplainOptions Explain { get; set; } = new();
 
     public sealed class VerbFormsOptions
@@ -53,6 +54,29 @@ public sealed class GeminiOptions
             "- If the input is not already infinitive, still return the infinitive for that verb.\n" +
             "- If a form is ambiguous, choose the most common modern Danish form.\n\n" +
             "Verb: {verb}";
+    }
+
+    public sealed class DegreeComparisonOptions
+    {
+        public string SystemInstruction { get; set; } =
+            "You are a linguistic tool for degrees of comparison. " +
+            "Detect the input language automatically. " +
+            "Return comparison forms in the requested target language. " +
+            "Return ONLY valid JSON matching the schema. Never add markdown or extra keys.";
+
+        public string PromptTemplate { get; set; } =
+            "Provide degrees of comparison for the input word.\n" +
+            "Input word: {word}\n" +
+            "Target language for forms: {targetLanguage}\n" +
+            "Translation language: {translationIn} (ISO 639-1 code or language name)\n\n" +
+            "Rules:\n" +
+            "- Detect the input language automatically.\n" +
+            "- If the input is not already in the target language, translate to the target language first, then provide comparison degrees in the target language.\n" +
+            "- positive, comparative, superlative: each with form (in target language) and translation (in translation language).\n" +
+            "- If the comparison is irregular, set isIrregular to true and explain briefly in note.\n" +
+            "- If the target language uses periphrastic comparison for this adjective, use the natural periphrastic forms.\n" +
+            "- If note is not needed, return an empty string.\n\n" +
+            "Word: {word}";
     }
 
     public sealed class ExplainOptions

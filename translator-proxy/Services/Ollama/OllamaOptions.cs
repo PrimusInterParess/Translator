@@ -14,9 +14,17 @@ public sealed class OllamaOptions
     public int? RequestTimeoutSeconds { get; set; }
 
     public VerbFormsOptions VerbForms { get; set; } = new();
+    public DegreeComparisonOptions DegreeComparison { get; set; } = new();
     public ExplainOptions Explain { get; set; } = new();
 
     public sealed class VerbFormsOptions
+    {
+        public string? SystemInstruction { get; set; }
+
+        public string? PromptTemplate { get; set; }
+    }
+
+    public sealed class DegreeComparisonOptions
     {
         public string? SystemInstruction { get; set; }
 

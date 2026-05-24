@@ -5,6 +5,7 @@ internal static class LlmConstants
     public const int MaxExplainTextLength = 500;
     public const int MaxExplainContextLength = 2000;
     public const int MaxVerbFormsTextLength = 120;
+    public const int MaxDegreeComparisonTextLength = 120;
 
     public const string ErrMissingOllamaModel = "Server is missing Ollama:Model configuration";
     public const string ErrMissingOllamaBaseUrl = "Server is missing Ollama:BaseUrl configuration";
@@ -12,6 +13,8 @@ internal static class LlmConstants
     public const string ErrMissingOllamaExplainPromptTemplate = "Server is missing Ollama:Explain:PromptTemplate configuration";
     public const string ErrMissingOllamaVerbFormsSystemInstruction = "Server is missing Ollama:VerbForms:SystemInstruction configuration";
     public const string ErrMissingOllamaVerbFormsPromptTemplate = "Server is missing Ollama:VerbForms:PromptTemplate configuration";
+    public const string ErrMissingOllamaDegreeComparisonSystemInstruction = "Server is missing Ollama:DegreeComparison:SystemInstruction configuration";
+    public const string ErrMissingOllamaDegreeComparisonPromptTemplate = "Server is missing Ollama:DegreeComparison:PromptTemplate configuration";
 
     public const string ErrMissingText = "Missing text";
     public const string ErrTextTooLongFormat = "Text too long (max {0} chars)";
@@ -39,5 +42,16 @@ internal static class LlmConstants
         "- past (string: simple past form)\n" +
         "- pastParticiple (string: participle only, no auxiliary)\n" +
         "- imperative (string: normal imperative form)\n" +
+        "No markdown, no code fences, no extra keys.";
+
+    public const string DegreeComparisonJsonSchema =
+        "Return a single JSON object with exactly these top-level keys:\n" +
+        "- detectedInputLanguage (string: language name of the input word)\n" +
+        "- targetLanguage (string: language name used for the comparison forms)\n" +
+        "- positive (object: { form, translation } — positive degree in target language plus translation)\n" +
+        "- comparative (object: { form, translation } — comparative degree in target language plus translation)\n" +
+        "- superlative (object: { form, translation } — superlative degree in target language plus translation)\n" +
+        "- isIrregular (boolean: true when the comparison pattern is irregular)\n" +
+        "- note (string: brief note about irregularity or periphrastic forms; empty string if none)\n" +
         "No markdown, no code fences, no extra keys.";
 }
