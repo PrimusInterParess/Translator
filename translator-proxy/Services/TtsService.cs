@@ -69,11 +69,14 @@ public sealed class TtsService : ITtsService
             );
         }
 
-        var url =
-            $"{TtsConstants.GoogleTtsSynthesizeBaseUrl}?{TtsConstants.GoogleTtsApiKeyQueryParamName}={Uri.EscapeDataString(apiKey)}";
+        var url = TtsConstants.GoogleTtsSynthesizeBaseUrl;
         var http = _httpClientFactory.CreateClient();
-
-        using var response = await http.PostAsJsonAsync(url, body, cancellationToken);
+        using var request = new HttpRequestMessage(HttpMethod.Post, url)
+        {
+            Content = JsonContent.Create(body)
+        };
+        request.Headers.TryAddWithoutValidation(TtsConstants.GoogleTtsApiKeyHeaderName, apiKey);
+        using var response = await http.SendAsync(request, cancellationToken);
 
         JsonElement? json = null;
         try
@@ -103,6 +106,11 @@ public sealed class TtsService : ITtsService
                 {
                     msg = mm.GetString()!;
                 }
+            }
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                msg = TtsConstants.ErrGoogleTtsForbidden;
             }
 
             return new TtsServiceResult(

@@ -10,7 +10,7 @@ internal static class TtsConstants
     public const string LegacyGoogleTtsApiKeyConfigKey = "GOOGLE_TTS_API_KEY";
 
     public const string GoogleTtsSynthesizeBaseUrl = "https://texttospeech.googleapis.com/v1/text:synthesize";
-    public const string GoogleTtsApiKeyQueryParamName = "key";
+    public const string GoogleTtsApiKeyHeaderName = "x-goog-api-key";
 
     public const string GoogleTtsAudioEncodingMp3 = "MP3";
     public const string OutputMimeTypeMpeg = "audio/mpeg";
@@ -24,6 +24,8 @@ internal static class TtsConstants
 
     public const string ErrMissingApiKey = "Server is missing Google TTS API key";
     public const string ErrGoogleReturnedEmptyAudio = "Google TTS returned empty audio";
+    public const string ErrGoogleTtsForbidden =
+        "Google TTS rejected the API key (403). Verify Text-to-Speech API is enabled and the key allows server requests.";
 
     public const string HttpStatusFallbackPrefix = "HTTP ";
 }
