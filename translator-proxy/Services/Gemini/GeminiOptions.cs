@@ -11,7 +11,7 @@ public sealed class GeminiOptions
     /// - https://generativelanguage.googleapis.com/v1/models
     /// - https://generativelanguage.googleapis.com/v1beta/models
     /// </summary>
-    public string GenerateContentBaseUrl { get; set; } = "https://generativelanguage.googleapis.com/v1/models";
+    public string GenerateContentBaseUrl { get; set; } = "https://generativelanguage.googleapis.com/v1beta/models";
 
     /// <summary>
     /// If upstream returns 404, try the other API version (v1 &lt;-&gt; v1beta) once.

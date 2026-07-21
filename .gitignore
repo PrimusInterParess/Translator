@@ -2,6 +2,9 @@
 .vs/
 .vscode/
 .idea/
+
+# Flat skills install from `npx skills` (this repo uses .cursor/skills/<category>/ instead)
+.agents/
 *.user
 *.suo
 *.userosscache

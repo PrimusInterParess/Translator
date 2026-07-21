@@ -81,7 +81,7 @@ public sealed class GeminiClient : IGeminiClient
 
         if (statusCode == (int)HttpStatusCode.BadRequest &&
             opts.EnableApiVersionFallback &&
-            LooksLikeUnsupportedFieldError(upstreamError))
+            ShouldRetryWithAlternateApiVersion(upstreamError))
         {
             var swappedBaseUrl = TrySwapApiVersion(baseUrl);
             if (!string.IsNullOrWhiteSpace(swappedBaseUrl) && !swappedBaseUrl.Equals(baseUrl, StringComparison.OrdinalIgnoreCase))
@@ -203,7 +203,7 @@ public sealed class GeminiClient : IGeminiClient
     {
         var baseUrl = (configured ?? string.Empty).Trim().TrimEnd('/');
         if (string.IsNullOrWhiteSpace(baseUrl))
-            baseUrl = "https://generativelanguage.googleapis.com/v1";
+            baseUrl = "https://generativelanguage.googleapis.com/v1beta";
 
         if (!baseUrl.EndsWith("/models", StringComparison.OrdinalIgnoreCase))
             baseUrl = $"{baseUrl}/models";
@@ -264,16 +264,21 @@ public sealed class GeminiClient : IGeminiClient
             .Trim();
     }
 
-    private static bool LooksLikeUnsupportedFieldError(string? upstreamError)
+    private static bool ShouldRetryWithAlternateApiVersion(string? upstreamError)
     {
         var s = (upstreamError ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(s)) return false;
+
+        var lower = s.ToLowerInvariant();
+
+        // e.g. "Developer instruction is not enabled for api version v1. Use api version v1beta instead."
+        if (lower.Contains("use api version v1beta") || lower.Contains("not enabled for api version v1"))
+            return true;
 
         // Examples include:
         // - "Invalid JSON payload received. Unknown name \"generationConfig\" ..."
         // - "Unknown name \"systemInstruction\" ..."
         // - field names echoed in snake_case: response_mime_type / response_schema
-        var lower = s.ToLowerInvariant();
         if (!(lower.Contains("unknown name") || lower.Contains("cannot find field") || lower.Contains("unrecognized field")))
             return false;
 
@@ -281,9 +286,11 @@ public sealed class GeminiClient : IGeminiClient
                lower.Contains("responsemimetype") ||
                lower.Contains("responseschema") ||
                lower.Contains("systeminstruction") ||
+               lower.Contains("developerinstruction") ||
                lower.Contains("response_mime_type") ||
                lower.Contains("response_schema") ||
-               lower.Contains("system_instruction");
+               lower.Contains("system_instruction") ||
+               lower.Contains("developer_instruction");
     }
 }
 

@@ -115,7 +115,7 @@ LLM features need **Ollama** (default) or **Gemini** configured on the proxy —
   "Gemini": {
     "ApiKey": "YOUR_KEY_HERE",
     "Model": "gemini-2.5-flash-lite",
-    "GenerateContentBaseUrl": "https://generativelanguage.googleapis.com/v1/models",
+    "GenerateContentBaseUrl": "https://generativelanguage.googleapis.com/v1beta/models",
     "EnableApiVersionFallback": true
   }
 }
@@ -146,7 +146,7 @@ Ollama__Model=qwen2.5:7b
 # Gemini (only when Llm__Provider=Gemini)
 # Gemini__ApiKey=YOUR_KEY_HERE
 # Gemini__Model=gemini-2.5-flash-lite
-# Gemini__GenerateContentBaseUrl=https://generativelanguage.googleapis.com/v1/models
+# Gemini__GenerateContentBaseUrl=https://generativelanguage.googleapis.com/v1beta/models
 # Gemini__EnableApiVersionFallback=true
 
 PORT=8788
@@ -340,7 +340,7 @@ Optional publishing:
   - `Gemini:ApiKey` (env var: `Gemini__ApiKey`). For backward compatibility it also accepts `GEMINI_API_KEY`.
 - Gemini settings:
   - `Gemini:Model` (env var: `Gemini__Model`) default: `gemini-2.5-flash-lite`
-  - `Gemini:GenerateContentBaseUrl` (env var: `Gemini__GenerateContentBaseUrl`) default: `https://generativelanguage.googleapis.com/v1/models`
+  - `Gemini:GenerateContentBaseUrl` (env var: `Gemini__GenerateContentBaseUrl`) default: `https://generativelanguage.googleapis.com/v1beta/models`
   - `Gemini:EnableApiVersionFallback` (env var: `Gemini__EnableApiVersionFallback`) default: `true` (retries once with `v1` ↔ `v1beta` on 404, and on certain 400 errors when the endpoint rejects JSON-mode fields)
 - You can create a free Gemini key in Google AI Studio (no credit card): `https://aistudio.google.com/app/apikey`
 - Keep keys in `appsettings.Development.local.json` (or env vars). Avoid committing keys into `appsettings.json`.
