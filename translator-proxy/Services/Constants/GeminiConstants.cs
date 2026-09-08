@@ -27,6 +27,8 @@ internal static class GeminiConstants
     public const string JsonPropText = "text";
 
     public const string ErrMissingText = "Missing text";
+    public const string ErrMissingSourceLang = "Missing source language";
+    public const string ErrMissingTargetLang = "Missing target language";
     public const string ErrTextTooLongFormat = "Text too long (max {0} chars)";
     public const string ErrContextTooLongFormat = "Context too long (max {0} chars)";
     public const string ErrMissingApiKey = "Server is missing Gemini API key";

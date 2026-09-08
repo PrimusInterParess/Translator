@@ -31,6 +31,7 @@ public sealed class GeminiOptions
     public VerbFormsOptions VerbForms { get; set; } = new();
     public DegreeComparisonOptions DegreeComparison { get; set; } = new();
     public ExplainOptions Explain { get; set; } = new();
+    public TranslateOptions Translate { get; set; } = new();
 
     public sealed class VerbFormsOptions
     {
@@ -102,6 +103,21 @@ public sealed class GeminiOptions
             "whenUsed = numbered usage patterns inferred from the input, with Danish examples per pattern; note confusable constructions only if relevant.\n" +
             "whyDifferent = contrast patterns and learner mistakes.\n" +
             "examples = 5-7 {context, source, meaning}; each entry a different use case for the part; context = use-case label; no duplicate use cases; at most one user's sentence.";
+    }
+
+    public sealed class TranslateOptions
+    {
+        public string SystemInstruction { get; set; } =
+            "You are a translator. Return ONLY valid JSON matching the schema. " +
+            "translatedText must be only the translation — no quotes, no romanization, no notes.";
+
+        public string PromptTemplate { get; set; } =
+            "Translate from {source} to {target}.\n\n" +
+            "Text:\n{text}\n\n" +
+            "Rules:\n" +
+            "- source and target are ISO 639-1 codes (da, bg, en, ...). If source is auto, detect it.\n" +
+            "- translatedText is a faithful translation of the text only.\n" +
+            "- Keep register, names, and numbers. Do not explain.";
     }
 }
 

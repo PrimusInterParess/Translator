@@ -13,7 +13,11 @@ if (builder.Environment.IsDevelopment())
 
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<ITtsService, TtsService>();
-builder.Services.AddSingleton<ITranslateService, MyMemoryTranslateService>();
+builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection("Gemini"));
+builder.Services.AddSingleton<IGeminiClient, GeminiClient>();
+builder.Services.AddSingleton<MyMemoryTranslateService>();
+builder.Services.AddSingleton<GeminiTranslateService>();
+builder.Services.AddSingleton<ITranslateService, FallbackTranslateService>();
 
 var llmProvider = builder.Configuration["Llm:Provider"] ?? "Gemini";
 if (llmProvider.Equals("Ollama", StringComparison.OrdinalIgnoreCase))
@@ -32,8 +36,6 @@ if (llmProvider.Equals("Ollama", StringComparison.OrdinalIgnoreCase))
 }
 else
 {
-    builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection("Gemini"));
-    builder.Services.AddSingleton<IGeminiClient, GeminiClient>();
     builder.Services.AddSingleton<IVerbFormsService, GeminiVerbFormsService>();
     builder.Services.AddSingleton<IDegreeComparisonService, GeminiDegreeComparisonService>();
     builder.Services.AddSingleton<IExplainService, GeminiExplainService>();
