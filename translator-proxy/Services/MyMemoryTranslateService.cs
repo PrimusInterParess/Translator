@@ -111,13 +111,11 @@ public sealed class MyMemoryTranslateService : ITranslateService
             );
         }
 
+        var translatedText = translatedTextEl.GetString()!;
         return new TranslateServiceResult(
             StatusCode: StatusCodes.Status200OK,
-            Body: new
-            {
-                ok = true,
-                translatedText = translatedTextEl.GetString()!
-            }
+            Body: new { ok = true, translatedText },
+            TranslatedText: translatedText
         );
     }
 

@@ -64,6 +64,8 @@ public sealed class GeminiTranslateService : ITranslateService
             promptTemplate = new GeminiOptions.TranslateOptions().PromptTemplate;
 
         var prompt = promptTemplate
+            .Replace("{sourceName}", LanguageName(source))
+            .Replace("{targetName}", LanguageName(target))
             .Replace("{source}", source)
             .Replace("{target}", target)
             .Replace("{text}", text);
@@ -90,7 +92,8 @@ public sealed class GeminiTranslateService : ITranslateService
 
         return new TranslateServiceResult(
             StatusCode: StatusCodes.Status200OK,
-            Body: new { ok = true, translatedText }
+            Body: new { ok = true, translatedText },
+            TranslatedText: translatedText
         );
     }
 
@@ -128,12 +131,23 @@ public sealed class GeminiTranslateService : ITranslateService
 
         req["generationConfig"] = new JsonObject
         {
+            ["temperature"] = 0,
             ["responseMimeType"] = "application/json",
             ["responseSchema"] = TranslateGeminiSchema.BuildResponseSchema()
         };
 
         return req;
     }
+
+    private static string LanguageName(string code) =>
+        code.ToLowerInvariant() switch
+        {
+            "da" => "Danish",
+            "bg" => "Bulgarian",
+            "en" => "English",
+            "auto" => "the detected language",
+            _ => code
+        };
 
     private static string? ExtractTranslatedText(string? raw)
     {

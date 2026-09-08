@@ -7,5 +7,5 @@ public interface ITranslateService
     Task<TranslateServiceResult> TranslateAsync(TranslateRequest? req, CancellationToken cancellationToken);
 }
 
-public sealed record TranslateServiceResult(int StatusCode, object Body);
+public sealed record TranslateServiceResult(int StatusCode, object Body, string? TranslatedText = null);
 

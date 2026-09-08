@@ -108,16 +108,17 @@ public sealed class GeminiOptions
     public sealed class TranslateOptions
     {
         public string SystemInstruction { get; set; } =
-            "You are a translator. Return ONLY valid JSON matching the schema. " +
-            "translatedText must be only the translation — no quotes, no romanization, no notes.";
+            "You are a bilingual dictionary translator. Return ONLY valid JSON matching the schema. " +
+            "translatedText is the meaning in the target language — never the source text, never an English lookalike.";
 
         public string PromptTemplate { get; set; } =
-            "Translate from {source} to {target}.\n\n" +
+            "Translate from {sourceName} to {targetName}.\n" +
+            "ISO codes: {source} -> {target}. If source is auto, detect the language first.\n\n" +
             "Text:\n{text}\n\n" +
             "Rules:\n" +
-            "- source and target are ISO 639-1 codes (da, bg, en, ...). If source is auto, detect it.\n" +
-            "- translatedText is a faithful translation of the text only.\n" +
-            "- Keep register, names, and numbers. Do not explain.";
+            "- Treat the text as {sourceName}, not English, unless sourceName is English.\n" +
+            "- If it is a single word, use the common dictionary meaning in {sourceName}.\n" +
+            "- translatedText must be {targetName} only. No quotes, notes, or the original spelling.";
     }
 }
 

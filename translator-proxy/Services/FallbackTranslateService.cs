@@ -34,7 +34,13 @@ public sealed class FallbackTranslateService : ITranslateService
 
         if (primary.StatusCode is >= 200 and <= 299)
         {
-            return primary;
+            if (!IsUntranslated(req?.Text, primary.TranslatedText))
+            {
+                return primary;
+            }
+
+            _logger.LogWarning("MyMemory echoed the source text; falling back to Gemini");
+            return await TryGeminiAsync(req, cancellationToken, primary);
         }
 
         if (!ShouldFallback(primary.StatusCode))
@@ -81,4 +87,12 @@ public sealed class FallbackTranslateService : ITranslateService
 
     private static bool ShouldFallback(int statusCode) =>
         statusCode is >= 500 or StatusCodes.Status429TooManyRequests;
+
+    private static bool IsUntranslated(string? source, string? translated)
+    {
+        var a = (source ?? string.Empty).Trim();
+        var b = (translated ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(a) || string.IsNullOrWhiteSpace(b)) return false;
+        return string.Equals(a, b, StringComparison.OrdinalIgnoreCase);
+    }
 }
