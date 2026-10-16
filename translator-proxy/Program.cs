@@ -17,9 +17,9 @@ builder.Services.Configure<GeminiOptions>(builder.Configuration.GetSection("Gemi
 builder.Services.AddSingleton<IGeminiClient, GeminiClient>();
 builder.Services.AddSingleton<MyMemoryTranslateService>();
 builder.Services.AddSingleton<GeminiTranslateService>();
-builder.Services.AddSingleton<ITranslateService, FallbackTranslateService>();
 
-var llmProvider = builder.Configuration["Llm:Provider"] ?? "Gemini";
+
+var llmProvider = builder.Configuration["Llm:Provider"] ?? "Ollama";
 if (llmProvider.Equals("Ollama", StringComparison.OrdinalIgnoreCase))
 {
     builder.Services.Configure<OllamaOptions>(builder.Configuration.GetSection("Ollama"));
@@ -30,12 +30,14 @@ if (llmProvider.Equals("Ollama", StringComparison.OrdinalIgnoreCase))
         client.Timeout = TimeSpan.FromSeconds(Math.Clamp(seconds, 30, 600));
     });
     builder.Services.AddSingleton<IOllamaClient, OllamaClient>();
+    builder.Services.AddSingleton<ITranslateService, OllamaTranslateService>();
     builder.Services.AddSingleton<IVerbFormsService, OllamaVerbFormsService>();
     builder.Services.AddSingleton<IDegreeComparisonService, OllamaDegreeComparisonService>();
     builder.Services.AddSingleton<IExplainService, OllamaExplainService>();
 }
 else
 {
+    builder.Services.AddSingleton<ITranslateService, FallbackTranslateService>();
     builder.Services.AddSingleton<IVerbFormsService, GeminiVerbFormsService>();
     builder.Services.AddSingleton<IDegreeComparisonService, GeminiDegreeComparisonService>();
     builder.Services.AddSingleton<IExplainService, GeminiExplainService>();

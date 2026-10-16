@@ -1,3 +1,30 @@
+## Local Mac setup (Ollama)
+
+The default provider is now Ollama with `qwen3:32b`. Translation, grammar explanations,
+verb forms and adjective comparisons all use this local model. Explanations and verb
+meanings default to English. Translation still respects the selected target language.
+The historical `/translate/mymemory` URL is retained for extension compatibility;
+with Ollama selected it performs local translation, without a cloud fallback.
+Pronunciation remains a separate browser/Google TTS setting.
+
+Keep the Ollama app running, then start the proxy from the repository root:
+
+```sh
+docker compose up -d --build
+```
+
+Alternatively, with the .NET 8 ASP.NET runtime installed, run `dotnet run`
+from `translator-proxy` (native Ollama address: `http://127.0.0.1:11434`).
+
+Load `translator-ui` as an unpacked Chrome/Edge extension, or reload it if already
+installed. For Docker Desktop, the default Ollama address is
+`http://host.docker.internal:11434`. Existing `.env` or local configuration values
+can override these defaults. Select `Llm:Provider=Gemini` to restore cloud learning
+features and MyMemory/Gemini translation. Qwen thinking is disabled for concise JSON
+responses. Model output should still be checked for linguistic accuracy.
+
+---
+
 # Translator (OversætMig)
 
 Chrome/Edge translation helper extension (**`translator-ui/`**) with a local ASP.NET Core proxy (**`translator-proxy/`**) for translation, high-quality TTS, and LLM-powered Danish learning tools.
@@ -85,7 +112,7 @@ LLM features need **Ollama** (default) or **Gemini** configured on the proxy —
    **Default LLM provider is Ollama (local).** Install [Ollama](https://ollama.com), pull a model, and keep it running:
 
    ```powershell
-   ollama pull qwen2.5:7b
+   ollama pull qwen3:32b
    ```
 
    On Windows the Ollama app runs in the background (you do not need `ollama serve`).
@@ -141,7 +168,7 @@ Tts__Google__ApiKey=YOUR_KEY_HERE
 # LLM provider: Ollama (default) or Gemini
 Llm__Provider=Ollama
 Ollama__BaseUrl=http://127.0.0.1:11434
-Ollama__Model=qwen2.5:7b
+Ollama__Model=qwen3:32b
 
 # Gemini (only when Llm__Provider=Gemini)
 # Gemini__ApiKey=YOUR_KEY_HERE
@@ -152,7 +179,7 @@ Ollama__Model=qwen2.5:7b
 PORT=8788
 ```
 
-Before starting the proxy with Ollama: `ollama pull qwen2.5:7b` (or your `Ollama__Model`) and ensure the Ollama app is running.
+Before starting the proxy with Ollama: `ollama pull qwen3:32b` (or your `Ollama__Model`) and ensure the Ollama app is running.
 
 2. Start the proxy:
 
@@ -331,7 +358,7 @@ Optional publishing:
 - **LLM provider** is selected via `Llm:Provider` (env var: `Llm__Provider`). Default: `Ollama`.
 - **Ollama** (local, no API key required):
   - `Ollama:BaseUrl` (env var: `Ollama__BaseUrl`) default: `http://127.0.0.1:11434`
-  - `Ollama:Model` (env var: `Ollama__Model`) default: `qwen2.5:7b` (first request after idle can be slow; use a larger model if you have VRAM headroom)
+  - `Ollama:Model` (env var: `Ollama__Model`) default: `qwen3:32b` (first request after idle can be slow; use a larger model if you have VRAM headroom)
   - Endpoints `/verbforms` and `/explain` call Ollama’s OpenAI-compatible `/v1/chat/completions` when the provider is Ollama.
   - **Ollama accuracy:** local models can still get Danish verb forms wrong; for reliable results set `Llm:Provider` to `Gemini`. Smaller/faster local models: `qwen2.5:3b` via `Ollama__Model`. Optional Windows env `OLLAMA_KEEP_ALIVE=30m` (restart Ollama) to reduce cold-start delays.
   - Prompts for `/verbforms` and `/explain` are configurable under `Ollama:VerbForms`, `Ollama:Explain`, `Gemini:VerbForms`, and `Gemini:Explain` in `appsettings.json`.

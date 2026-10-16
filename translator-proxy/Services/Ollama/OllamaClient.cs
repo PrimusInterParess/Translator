@@ -67,7 +67,8 @@ public sealed class OllamaClient : IOllamaClient
             ["model"] = model,
             ["messages"] = messages,
             ["temperature"] = opts.Temperature ?? 0.2,
-            ["stream"] = false
+            ["stream"] = false,
+            ["reasoning_effort"] = "none"
         };
 
         if (jsonMode)
