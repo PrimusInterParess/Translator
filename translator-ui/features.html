@@ -11,6 +11,15 @@
   <div class="card">
     <h1 class="appTitle">OversætMig — Features</h1>
 
+    <label>Translate</label>
+    <input id="translateTextInput" type="text" placeholder="Type a word…" />
+    <div class="hint">Uses Translate from / Translate to from Options.</div>
+    <button id="translateBtn" type="button" class="primaryBtn">Translate</button>
+    <div id="translateStatus" class="hint" aria-live="polite"></div>
+    <div id="translateOutput" class="outputBox" aria-live="polite"></div>
+
+    <div class="divider"></div>
+
     <label>Verb forms</label>
     <textarea id="verbFormsTextInput" rows="3" placeholder="Type a verb or phrase…"></textarea>
     <button id="verbFormsBtn" type="button" class="primaryBtn">Get verb forms</button>

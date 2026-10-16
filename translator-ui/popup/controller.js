@@ -65,6 +65,10 @@
     const googleVoiceNameInput = document.getElementById('googleVoiceNameInput');
     const googlePitchInput = document.getElementById('googlePitchInput');
     const googlePitchValue = document.getElementById('googlePitchValue');
+    const translateTextInput = document.getElementById('translateTextInput');
+    const translateBtn = document.getElementById('translateBtn');
+    const translateStatus = document.getElementById('translateStatus');
+    const translateOutput = document.getElementById('translateOutput');
     const verbFormsTextInput = document.getElementById('verbFormsTextInput');
     const verbFormsBtn = document.getElementById('verbFormsBtn');
     const verbFormsStatus = document.getElementById('verbFormsStatus');
@@ -304,6 +308,56 @@
       });
       ttsProxyUrlInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') persistProxyUrl().catch(() => { });
+      });
+    }
+
+    if (translateBtn && translateTextInput && translateOutput) {
+      const setStatus = (msg) => {
+        if (translateStatus) translateStatus.textContent = msg || '';
+      };
+
+      const setOutput = (text) => {
+        translateOutput.textContent = text || '';
+      };
+
+      const callTranslate = async () => {
+        const text = String(translateTextInput.value || '').trim();
+        if (!text) {
+          setStatus('Type something first.');
+          setOutput('');
+          return;
+        }
+
+        translateBtn.disabled = true;
+        setStatus('Loading…');
+        setOutput('');
+
+        const result = await chrome.runtime.sendMessage({ type: 'translate', text });
+        if (result && result.ok && typeof result.translatedText === 'string') {
+          setStatus('Done.');
+          setOutput(result.translatedText);
+          return;
+        }
+
+        const msg = typeof result?.error === 'string' && result.error.trim() ? result.error.trim() : 'Request failed';
+        throw new Error(msg);
+      };
+
+      translateBtn.addEventListener('click', () => {
+        callTranslate()
+          .catch((e) => {
+            setStatus(e?.message ? String(e.message) : 'Request failed');
+          })
+          .finally(() => {
+            translateBtn.disabled = false;
+          });
+      });
+
+      translateTextInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          translateBtn.click();
+        }
       });
     }
 
